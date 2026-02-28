@@ -116,19 +116,31 @@ const Agent = ({
 
     if (callStatus === CallStatus.FINISHED) {
       if (type === "generate") {
-        toast.info("Finalizing your interview profile...");
-        // Give the Vapi webhook a moment to save the interview doc
-        setTimeout(async () => {
-          const userInterviews = await getInterviewsByUserId(userId!);
-          if (userInterviews && userInterviews.length > 0) {
-            const latestId = userInterviews[0].id;
-            toast.success("Profile created! Redirecting to practice page...");
-            router.push(`/interview/${latestId}`);
-          } else {
-            toast.error("Could not find your new profile. Please check Vapi Webhook settings.");
-            router.push("/");
+        const toastId = toast.loading("Finalizing your interview profile. This may take a few seconds...");
+
+        // Polling to wait for the background webhook to finish
+        let attempts = 0;
+        const maxAttempts = 10;
+        const interval = setInterval(async () => {
+          attempts++;
+          console.log(`Checking for new profile (Attempt ${attempts})...`);
+
+          try {
+            const userInterviews = await getInterviewsByUserId(userId!);
+            if (userInterviews && userInterviews.length > 0) {
+              const latestId = userInterviews[0].id;
+              clearInterval(interval);
+              toast.success("Profile created! Redirecting to practice page...", { id: toastId });
+              router.push(`/interview/${latestId}`);
+            } else if (attempts >= maxAttempts) {
+              clearInterval(interval);
+              toast.error("Could not find your new profile. Please check Vapi Webhook settings.", { id: toastId });
+              router.push("/");
+            }
+          } catch (error) {
+            console.error("Error polling for interview:", error);
           }
-        }, 5000);
+        }, 2000); // Check every 2 seconds
       } else {
         handleGenerateFeedback(messages);
       }

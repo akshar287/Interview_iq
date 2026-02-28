@@ -6,10 +6,33 @@ import { getRandomInterviewCover } from "@/lib/utils";
 
 export async function POST(request: Request) {
   const body = await request.json();
-  console.log("VAPI WEBHOOK RECEIVED:", JSON.stringify(body, null, 2));
-  const { type, role, level, techstack, amount, userid, userId: userIdFromVapi } = body;
-  const finalUserId = userid || userIdFromVapi;
-  console.log("MAPPED USERID:", finalUserId);
+
+  // Log raw body to Firestore for debugging
+  try {
+    await db.collection("vapi_debug_logs").add({
+      receivedAt: new Date().toISOString(),
+      payload: body,
+    });
+  } catch (logError) {
+    console.error("FAILED TO LOG VAPI PAYLOAD:", logError);
+  }
+
+  console.log("VAPI WEBHOOK RECEIVED");
+
+  // Vapi sends data in message.call.variableValues or message.call.metadata
+  const call = body.message?.call;
+  const variables = call?.variableValues || {};
+  const metadata = call?.metadata || {};
+
+  const role = variables.role || body.role || "Software Engineer";
+  const type = variables.type || body.type || "technical";
+  const level = variables.level || body.level || "Senior";
+  const techstack = variables.techstack || body.techstack || "Next.js, Tailwind CSS";
+  const amount = variables.amount || body.amount || "5";
+
+  const finalUserId = metadata.userid || variables.userid || body.userid || body.userId;
+
+  console.log("MAPPED DATA:", { role, finalUserId });
 
   try {
     console.log("GENERATING QUESTIONS WITH AI...");
