@@ -86,12 +86,32 @@ export async function signIn({
     };
   }
 
-  // ✅ SERVER SIDE REDIRECT
-  redirect("/");
+  return { success: true };
 }
 
 export async function signOut() {
   const cookieStore = await cookies();
   cookieStore.delete("session");
   redirect("/sign-in");
+}
+
+export async function isAuthenticated() {
+  try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get("session");
+
+    if (!sessionCookie?.value) {
+      return false;
+    }
+
+    const decodedToken = await auth.verifySessionCookie(
+      sessionCookie.value,
+      true
+    );
+
+    return !!decodedToken?.uid;
+  } catch (error) {
+    console.error("Auth check error:", error);
+    return false;
+  }
 }
