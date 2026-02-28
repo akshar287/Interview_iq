@@ -51,11 +51,11 @@ export async function signUp({
       success: true,
       message: "Account created successfully. Please sign in.",
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Sign up error:", error);
     return {
       success: false,
-      message: "Failed to create account.",
+      message: `Sign up error: ${error.message || "Failed to create account."}`,
     };
   }
 }
@@ -88,11 +88,11 @@ export async function signIn({
     }
 
     await setSessionCookie(idToken);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Sign in error:", error);
     return {
       success: false,
-      message: "Failed to log in.",
+      message: `Sign in error: ${error.message || "Failed to log in."}`,
     };
   }
 
