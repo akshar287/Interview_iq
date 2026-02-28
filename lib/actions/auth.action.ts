@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 const SESSION_DURATION = 60 * 60 * 24 * 7;
 
 async function setSessionCookie(idToken: string) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   const sessionCookie = await auth.createSessionCookie(idToken, {
     expiresIn: SESSION_DURATION * 1000,
@@ -78,9 +78,6 @@ export async function signIn({
     }
 
     await setSessionCookie(idToken);
-
-    // ✅ SERVER SIDE REDIRECT
-    redirect("/");
   } catch (error) {
     console.error("Sign in error:", error);
     return {
@@ -88,10 +85,13 @@ export async function signIn({
       message: "Failed to log in.",
     };
   }
+
+  // ✅ SERVER SIDE REDIRECT
+  redirect("/");
 }
 
 export async function signOut() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   cookieStore.delete("session");
   redirect("/sign-in");
 }
