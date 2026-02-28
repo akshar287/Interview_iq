@@ -115,3 +115,34 @@ export async function isAuthenticated() {
     return false;
   }
 }
+
+export async function getCurrentUser(): Promise<User | null> {
+  try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get("session");
+
+    if (!sessionCookie?.value) {
+      return null;
+    }
+
+    const decodedToken = await auth.verifySessionCookie(
+      sessionCookie.value,
+      true
+    );
+
+    const userRecord = await db.collection("users").doc(decodedToken.uid).get();
+
+    if (!userRecord.exists) {
+      return null;
+    }
+
+    return {
+      id: decodedToken.uid,
+      name: userRecord.data()?.name || "",
+      email: userRecord.data()?.email || "",
+    };
+  } catch (error) {
+    console.error("GetCurrentUser error:", error);
+    return null;
+  }
+}
