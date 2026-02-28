@@ -94,8 +94,9 @@ const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
         }
       }
     } catch (error: any) {
-      console.error(error);
-      toast.error("Something went wrong.");
+      console.error("Auth Error:", error);
+      const errorMessage = error?.message || "An unexpected error occurred.";
+      toast.error(errorMessage);
     }
   };
 
