@@ -5,11 +5,16 @@ import { db } from "@/firebase/admin";
 import { getRandomInterviewCover } from "@/lib/utils";
 
 export async function POST(request: Request) {
-  const { type, role, level, techstack, amount, userid } = await request.json();
+  const body = await request.json();
+  console.log("VAPI WEBHOOK RECEIVED:", JSON.stringify(body, null, 2));
+  const { type, role, level, techstack, amount, userid, userId: userIdFromVapi } = body;
+  const finalUserId = userid || userIdFromVapi;
+  console.log("MAPPED USERID:", finalUserId);
 
   try {
+    console.log("GENERATING QUESTIONS WITH AI...");
     const { text: questions } = await generateText({
-      model: google("gemini-2.0-flash-001"),
+      model: google("gemini-1.5-flash"),
       prompt: `Prepare questions for a job interview.
         The job role is ${role}.
         The job experience level is ${level}.
@@ -25,24 +30,28 @@ export async function POST(request: Request) {
     `,
     });
 
+    console.log("AI QUESTIONS RECEIVED:", questions);
+
     const interview = {
       role: role,
       type: type,
       level: level,
       techstack: techstack.split(","),
       questions: JSON.parse(questions),
-      userId: userid,
+      userId: finalUserId,
       finalized: true,
       coverImage: getRandomInterviewCover(),
       createdAt: new Date().toISOString(),
     };
 
-    await db.collection("interviews").add(interview);
+    console.log("SAVING INTERVIEW TO DB:", JSON.stringify(interview, null, 2));
+    const docRef = await db.collection("interviews").add(interview);
+    console.log("INTERVIEW SAVED SUCCESSFULLY WITH ID:", docRef.id);
 
-    return Response.json({ success: true }, { status: 200 });
-  } catch (error) {
-    console.error("Error:", error);
-    return Response.json({ success: false, error: error }, { status: 500 });
+    return Response.json({ success: true, id: docRef.id }, { status: 200 });
+  } catch (error: any) {
+    console.error("WEBHOOK ERROR IN GENERATE ROUTE:", error?.message || error);
+    return Response.json({ success: false, error: error?.message || error }, { status: 500 });
   }
 }
 

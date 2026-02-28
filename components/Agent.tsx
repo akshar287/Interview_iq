@@ -11,6 +11,7 @@ import {
   createFeedback,
   getInterviewsByUserId,
 } from "@/lib/actions/general.action";
+import { toast } from "sonner";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -91,6 +92,7 @@ const Agent = ({
     }
 
     const handleGenerateFeedback = async (transcriptMessages: SavedMessage[]) => {
+      const toastId = toast.loading("Analyzing your interview and generating feedback...");
       try {
         const { success, feedbackId: id } = await createFeedback({
           interviewId: interviewId!,
@@ -100,27 +102,33 @@ const Agent = ({
         });
 
         if (success && id) {
+          toast.success("Feedback generated successfully!", { id: toastId });
           router.push(`/interview/${interviewId}/feedback`);
         } else {
+          toast.error("Failed to generate feedback. Returning to dashboard.", { id: toastId });
           router.push("/");
         }
       } catch (error) {
+        toast.error("An error occurred during feedback generation.", { id: toastId });
         router.push("/");
       }
     };
 
     if (callStatus === CallStatus.FINISHED) {
       if (type === "generate") {
+        toast.info("Finalizing your interview profile...");
         // Give the Vapi webhook a moment to save the interview doc
         setTimeout(async () => {
           const userInterviews = await getInterviewsByUserId(userId!);
           if (userInterviews && userInterviews.length > 0) {
             const latestId = userInterviews[0].id;
+            toast.success("Profile created! Redirecting to practice page...");
             router.push(`/interview/${latestId}`);
           } else {
+            toast.error("Could not find your new profile. Please check Vapi Webhook settings.");
             router.push("/");
           }
-        }, 3000);
+        }, 5000);
       } else {
         handleGenerateFeedback(messages);
       }
@@ -131,11 +139,22 @@ const Agent = ({
     setCallStatus(CallStatus.CONNECTING);
 
     if (type === "generate") {
-      await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
+      const vapiId = process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID || process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
+      console.log("VAPI START (GENERATE):", { vapiId, userName, userId });
+
+      if (!vapiId) {
+        toast.error("Vapi Generation ID is missing in .env!");
+        return;
+      }
+
+      await vapi.start(vapiId, {
         variableValues: {
           username: userName,
           userid: userId,
         },
+        metadata: {
+          userid: userId,
+        }
       });
     } else {
       let formattedQuestions = "";

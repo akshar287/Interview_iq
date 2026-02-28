@@ -20,6 +20,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
           .join("")
         : "The candidate did not say anything or provide any responses.";
 
+    console.log("GENERATING AI FEEDBACK FOR:", { interviewId, userId });
     const { object } = await generateObject({
       model: google("gemini-1.5-flash"),
       schema: feedbackSchema,
@@ -38,6 +39,8 @@ export async function createFeedback(params: CreateFeedbackParams) {
       system:
         "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
     });
+
+    console.log("AI FEEDBACK OBJECT RECEIVED:", JSON.stringify(object, null, 2));
 
     const feedback = {
       interviewId: interviewId,
@@ -58,6 +61,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
       feedbackRef = db.collection("feedback").doc();
     }
 
+    console.log("SAVING FEEDBACK TO DOC:", feedbackRef.id);
     await feedbackRef.set(feedback);
 
     console.log("Updating interview finalized status for:", interviewId);
@@ -67,7 +71,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
 
     return { success: true, feedbackId: feedbackRef.id };
   } catch (error: any) {
-    console.error("Error saving feedback:", error?.message || error);
+    console.error("CRITICAL ERROR SAVING FEEDBACK:", error?.message || error);
     return { success: false };
   }
 }
