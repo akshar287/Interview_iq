@@ -10,17 +10,18 @@ export async function createFeedback(params: CreateFeedbackParams) {
   const { interviewId, userId, transcript, feedbackId } = params;
 
   try {
-    const formattedTranscript = transcript
-      .map(
-        (sentence: { role: string; content: string }) =>
-          `- ${sentence.role}: ${sentence.content}\n`
-      )
-      .join("");
+    const formattedTranscript =
+      transcript && transcript.length > 0
+        ? transcript
+          .map(
+            (sentence: { role: string; content: string }) =>
+              `- ${sentence.role}: ${sentence.content}\n`
+          )
+          .join("")
+        : "The candidate did not say anything or provide any responses.";
 
     const { object } = await generateObject({
-      model: google("gemini-2.0-flash-001", {
-        structuredOutputs: false,
-      }),
+      model: google("gemini-1.5-flash"),
       schema: feedbackSchema,
       prompt: `
         You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Don't be lenient with the candidate. If there are mistakes or areas for improvement, point them out.
@@ -59,9 +60,14 @@ export async function createFeedback(params: CreateFeedbackParams) {
 
     await feedbackRef.set(feedback);
 
+    console.log("Updating interview finalized status for:", interviewId);
+    await db.collection("interviews").doc(interviewId).update({
+      finalized: true,
+    });
+
     return { success: true, feedbackId: feedbackRef.id };
-  } catch (error) {
-    console.error("Error saving feedback:", error);
+  } catch (error: any) {
+    console.error("Error saving feedback:", error?.message || error);
     return { success: false };
   }
 }
@@ -69,7 +75,9 @@ export async function createFeedback(params: CreateFeedbackParams) {
 export async function getInterviewById(id: string): Promise<Interview | null> {
   const interview = await db.collection("interviews").doc(id).get();
 
-  return interview.data() as Interview | null;
+  if (!interview.exists) return null;
+
+  return { id: interview.id, ...interview.data() } as Interview;
 }
 
 export async function getFeedbackByInterviewId(
@@ -111,8 +119,31 @@ export async function getLatestInterviews(
   })) as Interview[];
 
   return formattedInterviews
-    .filter((interview) => interview.userId !== userId && interview.finalized === true)
+    .filter(
+      (interview) => interview.userId !== userId && interview.finalized === true
+    )
     .slice(0, limit);
+}
+
+export async function getLatestUserInterview(
+  userId: string
+): Promise<Interview | null> {
+  if (!userId) return null;
+
+  const interviews = await db
+    .collection("interviews")
+    .where("userId", "==", userId)
+    .orderBy("createdAt", "desc")
+    .limit(1)
+    .get();
+
+  if (interviews.empty) return null;
+
+  const doc = interviews.docs[0];
+  return {
+    id: doc.id,
+    ...doc.data(),
+  } as Interview;
 }
 
 export async function getInterviewsByUserId(
@@ -133,4 +164,19 @@ export async function getInterviewsByUserId(
   return formatted.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
+}
+export async function getFeedbackByUserId(
+  userId: string
+): Promise<Feedback[] | null> {
+  if (!userId) return [];
+
+  const feedbacks = await db
+    .collection("feedback")
+    .where("userId", "==", userId)
+    .get();
+
+  return feedbacks.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Feedback[];
 }

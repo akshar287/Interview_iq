@@ -7,6 +7,8 @@ import InterviewCard from "@/components/InterviewCard";
 
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import {
+  getFeedbackByUserId,
+  getInterviewById,
   getInterviewsByUserId,
   getLatestInterviews,
 } from "@/lib/actions/general.action";
@@ -16,12 +18,33 @@ async function Home() {
 
   if (!user) redirect("/sign-in");
 
-  const [userInterviews, allInterview] = await Promise.all([
+  const [createdInterviews, allInterview, userFeedback] = await Promise.all([
     getInterviewsByUserId(user?.id!),
     getLatestInterviews({ userId: user?.id! }),
+    getFeedbackByUserId(user?.id!),
   ]);
 
-  const hasPastInterviews = userInterviews?.length! > 0;
+  // Identify interviews the user practiced but didn't create
+  const practicedInterviewIds = [
+    ...new Set(userFeedback?.map((f) => f.interviewId)),
+  ];
+  const missingInterviewIds = practicedInterviewIds.filter(
+    (id) => !createdInterviews?.some((i) => i.id === id)
+  );
+
+  const missingInterviews = await Promise.all(
+    missingInterviewIds.map((id) => getInterviewById(id))
+  );
+
+  // Combine and sort all user-relevant interviews
+  const userInterviews = [
+    ...(createdInterviews || []),
+    ...(missingInterviews.filter((i) => i !== null) as Interview[]),
+  ].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  const hasPastInterviews = userInterviews.length > 0;
   const hasUpcomingInterviews = allInterview?.length! > 0;
 
   return (
@@ -34,7 +57,7 @@ async function Home() {
           </p>
 
           <Button asChild className="btn-primary max-sm:w-full">
-            <Link href="/interview">Start an Interview</Link>
+            <Link href="/interview">Create New Interview Profile</Link>
           </Button>
         </div>
 

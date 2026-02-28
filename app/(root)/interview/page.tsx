@@ -8,7 +8,7 @@ const Page = async () => {
 
   return (
     <>
-      <h3>Interview generation</h3>
+      <h3 className="mb-5">Create Your Interview Profile</h3>
 
       <Agent
         userName={user?.name!}

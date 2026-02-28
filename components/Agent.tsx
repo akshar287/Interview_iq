@@ -7,7 +7,10 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
-import { createFeedback } from "@/lib/actions/general.action";
+import {
+  createFeedback,
+  getInterviewsByUserId,
+} from "@/lib/actions/general.action";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -87,27 +90,37 @@ const Agent = ({
       setLastMessage(messages[messages.length - 1].content);
     }
 
-    const handleGenerateFeedback = async (messages: SavedMessage[]) => {
-      console.log("handleGenerateFeedback");
+    const handleGenerateFeedback = async (transcriptMessages: SavedMessage[]) => {
+      try {
+        const { success, feedbackId: id } = await createFeedback({
+          interviewId: interviewId!,
+          userId: userId!,
+          transcript: transcriptMessages,
+          feedbackId,
+        });
 
-      const { success, feedbackId: id } = await createFeedback({
-        interviewId: interviewId!,
-        userId: userId!,
-        transcript: messages,
-        feedbackId,
-      });
-
-      if (success && id) {
-        router.push(`/interview/${interviewId}/feedback`);
-      } else {
-        console.log("Error saving feedback");
+        if (success && id) {
+          router.push(`/interview/${interviewId}/feedback`);
+        } else {
+          router.push("/");
+        }
+      } catch (error) {
         router.push("/");
       }
     };
 
     if (callStatus === CallStatus.FINISHED) {
       if (type === "generate") {
-        router.push("/");
+        // Give the Vapi webhook a moment to save the interview doc
+        setTimeout(async () => {
+          const userInterviews = await getInterviewsByUserId(userId!);
+          if (userInterviews && userInterviews.length > 0) {
+            const latestId = userInterviews[0].id;
+            router.push(`/interview/${latestId}`);
+          } else {
+            router.push("/");
+          }
+        }, 3000);
       } else {
         handleGenerateFeedback(messages);
       }
@@ -141,6 +154,7 @@ const Agent = ({
   };
 
   const handleDisconnect = () => {
+    console.log("End button clicked, setting callStatus to FINISHED");
     setCallStatus(CallStatus.FINISHED);
     vapi.stop();
   };
