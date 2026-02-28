@@ -6,7 +6,6 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { auth } from "@/firebase/client";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
@@ -20,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { signIn, signUp } from "@/lib/actions/auth.action";
 import FormField from "./FormField";
 
-const authFormSchema = (type: FormType) => {
+const authFormSchema = (type: "sign-in" | "sign-up") => {
   return z.object({
     name: type === "sign-up" ? z.string().min(3) : z.string().optional(),
     email: z.string().email(),
@@ -28,10 +27,9 @@ const authFormSchema = (type: FormType) => {
   });
 };
 
-const AuthForm = ({ type }: { type: FormType }) => {
-  const router = useRouter();
-
+const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
   const formSchema = authFormSchema(type);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -56,16 +54,15 @@ const AuthForm = ({ type }: { type: FormType }) => {
           uid: userCredential.user.uid,
           name: name!,
           email,
-          password,
         });
 
-        if (!result.success) {
-          toast.error(result.message);
+        if (!result?.success) {
+          toast.error(result?.message);
           return;
         }
 
         toast.success("Account created successfully. Please sign in.");
-        router.push("/sign-in");
+        window.location.href = "/sign-in";
       } else {
         const { email, password } = data;
 
@@ -76,22 +73,24 @@ const AuthForm = ({ type }: { type: FormType }) => {
         );
 
         const idToken = await userCredential.user.getIdToken();
+
         if (!idToken) {
-          toast.error("Sign in Failed. Please try again.");
+          toast.error("Sign in failed.");
           return;
         }
 
-        await signIn({
+        const result = await signIn({
           email,
           idToken,
         });
 
-        toast.success("Signed in successfully.");
-        router.push("/");
+        if (result && !result.success) {
+          toast.error(result.message);
+        }
       }
-    } catch (error) {
-      console.log(error);
-      toast.error(`There was an error: ${error}`);
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Something went wrong.");
     }
   };
 
