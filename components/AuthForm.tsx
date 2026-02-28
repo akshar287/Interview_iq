@@ -95,8 +95,36 @@ const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
       }
     } catch (error: any) {
       console.error("Auth Error:", error);
-      const errorMessage = error?.message || "An unexpected error occurred.";
-      toast.error(errorMessage);
+      let errorMessage = "An unexpected error occurred.";
+
+      if (error?.code) {
+        // Firebase specific errors
+        switch (error.code) {
+          case "auth/invalid-credential":
+            errorMessage = "Invalid email or password.";
+            break;
+          case "auth/user-not-found":
+            errorMessage = "No account found with this email.";
+            break;
+          case "auth/wrong-password":
+            errorMessage = "Incorrect password.";
+            break;
+          case "auth/email-already-in-use":
+            errorMessage = "This email is already registered.";
+            break;
+          case "auth/unauthorized-domain":
+            errorMessage = "Unauthorized Domain: Please add your deployment domain to the Firebase Console -> Authentication -> Settings -> Authorized domains.";
+            break;
+          default:
+            errorMessage = `Firebase Error: ${error.message}`;
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage, {
+        duration: 10000, // Show for 10 seconds to give user time to read
+      });
     }
   };
 
