@@ -77,6 +77,16 @@ export async function signIn({
       };
     }
 
+    const dbUserRecord = await db.collection("users").doc(userRecord.uid).get();
+
+    if (!dbUserRecord.exists) {
+      await db.collection("users").doc(userRecord.uid).set({
+        name: userRecord.displayName || email.split("@")[0],
+        email,
+        createdAt: new Date(),
+      });
+    }
+
     await setSessionCookie(idToken);
   } catch (error) {
     console.error("Sign in error:", error);
@@ -109,7 +119,9 @@ export async function isAuthenticated() {
       true
     );
 
-    return !!decodedToken?.uid;
+    const userRecord = await db.collection("users").doc(decodedToken.uid).get();
+
+    return !!userRecord.exists;
   } catch (error) {
     console.error("Auth check error:", error);
     return false;

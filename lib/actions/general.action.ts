@@ -102,15 +102,17 @@ export async function getLatestInterviews(
   const interviews = await db
     .collection("interviews")
     .orderBy("createdAt", "desc")
-    .where("finalized", "==", true)
-    .where("userId", "!=", userId)
-    .limit(limit)
+    .limit(limit + 20)
     .get();
 
-  return interviews.docs.map((doc) => ({
+  const formattedInterviews = interviews.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
   })) as Interview[];
+
+  return formattedInterviews
+    .filter((interview) => interview.userId !== userId && interview.finalized === true)
+    .slice(0, limit);
 }
 
 export async function getInterviewsByUserId(
@@ -121,11 +123,14 @@ export async function getInterviewsByUserId(
   const interviews = await db
     .collection("interviews")
     .where("userId", "==", userId)
-    .orderBy("createdAt", "desc")
     .get();
 
-  return interviews.docs.map((doc) => ({
+  const formatted = interviews.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
   })) as Interview[];
+
+  return formatted.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 }
