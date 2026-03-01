@@ -7,7 +7,7 @@ import { db } from "@/firebase/admin";
 import { feedbackSchema } from "@/constants";
 
 export async function createFeedback(params: CreateFeedbackParams) {
-  const { interviewId, userId, transcript, feedbackId } = params;
+  const { interviewId, userId, transcript, feedbackId, analysis } = params;
 
   try {
     const formattedTranscript =
@@ -20,14 +20,22 @@ export async function createFeedback(params: CreateFeedbackParams) {
           .join("")
         : "The candidate did not say anything or provide any responses.";
 
+    const facialAnalysisData = analysis
+      ? `\nAdditionally, real-time facial analysis during the interview showed:
+         - Average Eye Contact: ${analysis.avgEyeContact.toFixed(1)}%
+         - Confidence/Engagement Level: ${analysis.avgConfidence.toFixed(1)}%
+         Use these metrics to help inform your "Confidence & Clarity" score and provide tips for better physical engagement.`
+      : "";
+
     console.log("GENERATING AI FEEDBACK FOR:", { interviewId, userId });
     const { object } = await generateObject({
-      model: google("gemini-1.5-flash"),
+      model: google("gemini-1.5-flash-latest"),
       schema: feedbackSchema,
       prompt: `
         You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Don't be lenient with the candidate. If there are mistakes or areas for improvement, point them out.
         Transcript:
         ${formattedTranscript}
+        ${facialAnalysisData}
 
         Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided:
         - **Communication Skills**: Clarity, articulation, structured responses.

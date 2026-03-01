@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ import {
   getInterviewsByUserId,
 } from "@/lib/actions/general.action";
 import { toast } from "sonner";
+import CameraModule from "./CameraModule";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -38,6 +39,21 @@ const Agent = ({
   const [messages, setMessages] = useState<SavedMessage[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastMessage, setLastMessage] = useState<string>("");
+
+  // Metrics for facial analysis
+  const [metrics, setMetrics] = useState({
+    totalEyeContact: 0,
+    totalConfidence: 0,
+    count: 0,
+  });
+
+  const handleMetricsUpdate = useCallback((newMetrics: { eyeContact: number; confidence: number }) => {
+    setMetrics(prev => ({
+      totalEyeContact: prev.totalEyeContact + newMetrics.eyeContact,
+      totalConfidence: prev.totalConfidence + newMetrics.confidence,
+      count: prev.count + 1,
+    }));
+  }, []);
 
   useEffect(() => {
     const onCallStart = () => {
@@ -94,11 +110,20 @@ const Agent = ({
     const handleGenerateFeedback = async (transcriptMessages: SavedMessage[]) => {
       const toastId = toast.loading("Analyzing your interview and generating feedback...");
       try {
+        const avgEyeContact = metrics.count > 0 ? metrics.totalEyeContact / metrics.count : 70;
+        const avgConfidence = metrics.count > 0 ? metrics.totalConfidence / metrics.count : 70;
+
+        console.log("INTERVIEW ANALYTICS:", { avgEyeContact, avgConfidence, ticks: metrics.count });
+
         const { success, feedbackId: id } = await createFeedback({
           interviewId: interviewId!,
           userId: userId!,
           transcript: transcriptMessages,
           feedbackId,
+          analysis: {
+            avgEyeContact,
+            avgConfidence
+          }
         });
 
         if (success && id) {
@@ -149,7 +174,7 @@ const Agent = ({
         handleGenerateFeedback(messages);
       }
     }
-  }, [messages, callStatus, feedbackId, interviewId, router, type, userId]);
+  }, [messages, callStatus, feedbackId, interviewId, router, type, userId, metrics]);
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
@@ -215,17 +240,14 @@ const Agent = ({
         {/* User Profile Card */}
         <div className="card-border">
           <div className="card-content">
-            <Image
-              src="/user-avatar.png"
-              alt="profile-image"
-              width={539}
-              height={539}
-              className="rounded-full object-cover size-[120px]"
-            />
+            <div className="size-[120px] rounded-full overflow-hidden">
+              <CameraModule onMetricsUpdate={handleMetricsUpdate} />
+            </div>
             <h3>{userName}</h3>
           </div>
         </div>
       </div>
+
 
       {messages.length > 0 && (
         <div className="transcript-border">

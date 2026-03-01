@@ -30,6 +30,10 @@ interface CreateFeedbackParams {
   userId: string;
   transcript: { role: string; content: string }[];
   feedbackId?: string;
+  analysis?: {
+    avgEyeContact: number;
+    avgConfidence: number;
+  };
 }
 
 interface User {
