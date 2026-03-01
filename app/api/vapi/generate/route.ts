@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   try {
     console.log("GENERATING QUESTIONS WITH AI...");
     const { text: questions } = await generateText({
-      model: google("gemini-1.5-flash"),
+      model: google("gemini-1.5-flash-latest"),
       prompt: `Prepare exactly ${amount} interview questions for a ${level} level ${role} role.
         The tech stack is: ${techstackStr}.
         Focus: ${type} questions.

@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-03-01T04:20:35.160Z",
+  "url": "https://interview-iq-beta.vercel.app/api/vapi/generate",
+  "status": 500,
+  "body": {
+    "success": false,
+    "error": "models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods."
+  }
+}
