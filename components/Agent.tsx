@@ -120,21 +120,25 @@ const Agent = ({
 
         // Polling to wait for the background webhook to finish
         let attempts = 0;
-        const maxAttempts = 10;
+        const maxAttempts = 15; // increased to 30 seconds total
         const interval = setInterval(async () => {
           attempts++;
-          console.log(`Checking for new profile (Attempt ${attempts})...`);
+          const secondsLeft = (maxAttempts - attempts) * 2;
+          console.log(`Checking for new profile (Attempt ${attempts}/${maxAttempts})...`);
+          toast.loading(`Waiting for AI (Attempt ${attempts}/${maxAttempts})...`, { id: toastId });
 
           try {
             const userInterviews = await getInterviewsByUserId(userId!);
             if (userInterviews && userInterviews.length > 0) {
               const latestId = userInterviews[0].id;
+              console.log("Found profile!", latestId);
               clearInterval(interval);
-              toast.success("Profile created! Redirecting to practice page...", { id: toastId });
+              toast.success("Profile created! Redirecting...", { id: toastId });
               router.push(`/interview/${latestId}`);
             } else if (attempts >= maxAttempts) {
               clearInterval(interval);
-              toast.error("Could not find your new profile. Please check Vapi Webhook settings.", { id: toastId });
+              toast.error("Timed out waiting for profile. Please check /diag for webhook logs.", { id: toastId });
+              console.warn("POLLING TIMED OUT. Check if vapi_debug_logs count increases at /diag.");
               router.push("/");
             }
           } catch (error) {
