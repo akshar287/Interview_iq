@@ -2,8 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
 import InterviewCard from "@/components/InterviewCard";
+import NewInterviewButton from "@/components/NewInterviewButton";
 
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import {
@@ -56,9 +56,7 @@ async function Home() {
             Practice real interview questions & get instant feedback
           </p>
 
-          <Button asChild className="btn-primary max-sm:w-full">
-            <Link href="/interview">Create New Interview Profile</Link>
-          </Button>
+          <NewInterviewButton userId={user?.id!} userName={user?.name!} />
         </div>
 
         <Image
