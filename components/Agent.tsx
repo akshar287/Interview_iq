@@ -238,12 +238,12 @@ const Agent = ({
         </div>
 
         {/* User Profile Card */}
-        <div className="card-border">
-          <div className="card-content">
-            <div className="size-[120px] rounded-full overflow-hidden">
-              <CameraModule onMetricsUpdate={handleMetricsUpdate} />
+        <div className="card-border h-[400px] overflow-hidden">
+          <div className="card-content !p-0 relative overflow-hidden">
+            <CameraModule onMetricsUpdate={handleMetricsUpdate} />
+            <div className="absolute bottom-5 left-0 w-full text-center z-20">
+              <h3 className="!mt-0 drop-shadow-lg text-white font-bold">{userName}</h3>
             </div>
-            <h3>{userName}</h3>
           </div>
         </div>
       </div>

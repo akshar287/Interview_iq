@@ -108,27 +108,36 @@ const CameraModule = ({ onMetricsUpdate }: CameraModuleProps) => {
     }, [modelsLoaded, runAnalysis]);
 
     return (
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-full border-4 border-[#5E17EB]">
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-2xl border-4 border-[#5E17EB]/40 shadow-inner group">
             <Webcam
                 ref={webcamRef}
                 audio={false}
                 mirrored={true}
-                className="object-cover w-full h-full rounded-full"
+                className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
                 videoConstraints={{
-                    width: 539,
-                    height: 539,
+                    width: 1280,
+                    height: 720,
                     facingMode: "user",
                 }}
             />
             <canvas
                 ref={canvasRef}
-                className="absolute top-0 left-0 w-full h-full rounded-full pointer-events-none"
+                className="absolute top-0 left-0 w-full h-full pointer-events-none"
             />
             {!modelsLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white text-xs font-medium">
-                    Loading AI...
+                <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-white text-sm font-semibold transition-opacity duration-500">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="size-10 border-4 border-primary-200 border-t-transparent rounded-full animate-spin" />
+                        <p className="animate-pulse">Initializing Vision AI...</p>
+                    </div>
                 </div>
             )}
+            <div className="absolute top-4 right-4 z-30">
+                <div className="flex items-center gap-2 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full border border-white/10">
+                    <div className="size-2 bg-red-500 rounded-full animate-pulse" />
+                    <span className="text-[10px] text-white font-bold tracking-widest uppercase">Live Analysis</span>
+                </div>
+            </div>
         </div>
     );
 };
