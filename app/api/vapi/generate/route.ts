@@ -5,13 +5,19 @@ import { db } from "@/firebase/admin";
 import { getRandomInterviewCover } from "@/lib/utils";
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  let body: any;
+  try {
+    body = await request.json();
+  } catch (e) {
+    return Response.json({ success: false, error: "Invalid JSON" }, { status: 400 });
+  }
 
   // Log raw body to Firestore for debugging
   try {
     await db.collection("vapi_debug_logs").add({
       receivedAt: new Date().toISOString(),
       payload: body,
+      vapiMessageType: body.message?.type || "direct_post",
     });
   } catch (logError) {
     console.error("FAILED TO LOG VAPI PAYLOAD:", logError);
@@ -27,7 +33,7 @@ export async function POST(request: Request) {
   const role = variables.role || body.role || "Software Engineer";
   const type = variables.type || body.type || "technical";
   const level = variables.level || body.level || "Senior";
-  const techstack = variables.techstack || body.techstack || "Next.js, Tailwind CSS";
+  const techstackStr = variables.techstack || body.techstack || "Next.js, Tailwind CSS";
   const amount = variables.amount || body.amount || "5";
 
   const finalUserId = metadata.userid || variables.userid || body.userid || body.userId;
@@ -41,7 +47,7 @@ export async function POST(request: Request) {
       prompt: `Prepare questions for a job interview.
         The job role is ${role}.
         The job experience level is ${level}.
-        The tech stack used in the job is: ${techstack}.
+        The tech stack used in the job is: ${techstackStr}.
         The focus between behavioural and technical questions should lean towards: ${type}.
         The amount of questions required is: ${amount}.
         Please return only the questions, without any additional text.
@@ -55,13 +61,23 @@ export async function POST(request: Request) {
 
     console.log("AI QUESTIONS RECEIVED:", questions);
 
+    let parsedQuestions = [];
+    try {
+      // Clean AI response
+      const cleanJson = questions.replace(/```json/g, "").replace(/```/g, "").trim();
+      parsedQuestions = JSON.parse(cleanJson);
+    } catch (e) {
+      console.error("JSON PARSE ERROR:", questions);
+      parsedQuestions = ["Could you tell me about your background?", "What are your core strengths?", "How do you handle difficult technical challenges?"];
+    }
+
     const interview = {
       role: role,
       type: type,
       level: level,
-      techstack: techstack.split(","),
-      questions: JSON.parse(questions),
-      userId: finalUserId,
+      techstack: typeof techstackStr === "string" ? techstackStr.split(",").map((s: string) => s.trim()) : techstackStr,
+      questions: parsedQuestions,
+      userId: finalUserId || "anonymous",
       finalized: true,
       coverImage: getRandomInterviewCover(),
       createdAt: new Date().toISOString(),
