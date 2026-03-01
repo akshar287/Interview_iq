@@ -33,6 +33,8 @@ const Agent = ({
   feedbackId,
   type,
   questions,
+  interviewPosition,
+  interviewExperience,
 }: AgentProps) => {
   const router = useRouter();
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
@@ -192,6 +194,8 @@ const Agent = ({
         variableValues: {
           username: userName,
           userid: userId,
+          role: interviewPosition || "",
+          level: interviewExperience || "",
         },
         metadata: {
           userid: userId,
