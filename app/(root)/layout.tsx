@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { isAuthenticated, signOut } from "@/lib/actions/auth.action";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import AmbientSound from "@/components/AmbientSound";
 
 const Layout = async ({ children }: { children: ReactNode }) => {
   const isUserAuthenticated = await isAuthenticated();
@@ -28,6 +29,9 @@ const Layout = async ({ children }: { children: ReactNode }) => {
       </nav>
 
       {children}
+
+      {/* Ambient office sound — plays softly in the background */}
+      <AmbientSound />
     </div>
   );
 };
