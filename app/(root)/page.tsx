@@ -51,7 +51,7 @@ async function Home() {
     <>
       <section className="card-cta">
         <div className="flex flex-col gap-6 max-w-lg">
-          <h2>Get Interview-Ready with AI-Powered Practice & Feedback</h2>
+          <h2>AI Enabled Personal Interview and Personality Analyser</h2>
           <p className="text-lg">
             Practice real interview questions & get instant feedback
           </p>
