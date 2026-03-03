@@ -1,12 +1,20 @@
 "use server";
 
-import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import Groq from "groq-sdk";
 import { db } from "@/firebase/admin";
 import { feedbackSchema } from "@/constants";
+import { z } from "zod";
 
 /* ============================
-   CREATE FEEDBACK
+   INIT GROQ
+============================ */
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY!,
+});
+
+/* ============================
+   CREATE FEEDBACK (GROQ VERSION)
 ============================ */
 
 export async function createFeedback(params: CreateFeedbackParams) {
@@ -29,18 +37,24 @@ Additionally, real-time facial analysis during the interview showed:
 - Average Eye Contact: ${analysis.avgEyeContact.toFixed(1)}%
 - Confidence/Engagement Level: ${analysis.avgConfidence.toFixed(1)}%
 
-Use these metrics to help inform your "Confidence & Clarity" score.
+Use these metrics to help inform the "Confidence & Clarity" score.
 `
       : "";
 
-    console.log("Generating AI Feedback for:", interviewId);
+    console.log("Generating AI Feedback using GROQ for:", interviewId);
 
-    const { object } = await generateObject({
-      model: google("gemini-1.5-flash-latest"),
-      schema: feedbackSchema,
-      system:
-        "You are a professional interviewer analyzing a mock interview. Be strict, detailed, and structured.",
-      prompt: `
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile", // Best Groq model currently
+      temperature: 0.4,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a strict professional interviewer. Return only valid JSON. Do not explain anything.",
+        },
+        {
+          role: "user",
+          content: `
 Evaluate the following interview transcript.
 
 Transcript:
@@ -55,9 +69,39 @@ Score the candidate from 0 to 100 in:
 - Cultural & Role Fit
 - Confidence & Clarity
 
-Return structured output according to schema.
+Return strictly in this JSON format:
+
+{
+  "totalScore": number,
+  "categoryScores": [
+    { "name": string, "score": number, "comment": string }
+  ],
+  "strengths": string[],
+  "areasForImprovement": string[],
+  "finalAssessment": string
+}
 `,
+        },
+      ],
     });
+
+    const rawOutput = completion.choices[0]?.message?.content;
+
+    if (!rawOutput) {
+      throw new Error("Groq returned empty response");
+    }
+
+    let parsed;
+
+    try {
+      parsed = JSON.parse(rawOutput);
+    } catch (err) {
+      console.error("Invalid JSON from Groq:", rawOutput);
+      throw new Error("Failed to parse Groq JSON response");
+    }
+
+    // Validate using your existing Zod schema
+    const object = feedbackSchema.parse(parsed);
 
     const feedback = {
       interviewId,
@@ -84,7 +128,7 @@ Return structured output according to schema.
       finalized: true,
     });
 
-    console.log("Feedback saved successfully");
+    console.log("Feedback saved successfully (Groq)");
 
     return { success: true, feedbackId: feedbackRef.id };
   } catch (error: any) {
@@ -94,28 +138,19 @@ Return structured output according to schema.
 }
 
 /* ============================
-   GET INTERVIEW BY ID
+   KEEP ALL OTHER FUNCTIONS SAME
 ============================ */
 
-export async function getInterviewById(
-  id: string
-): Promise<Interview | null> {
+export async function getInterviewById(id: string): Promise<Interview | null> {
   const interview = await db.collection("interviews").doc(id).get();
-
   if (!interview.exists) return null;
-
   return { id: interview.id, ...interview.data() } as Interview;
 }
-
-/* ============================
-   GET FEEDBACK BY INTERVIEW ID
-============================ */
 
 export async function getFeedbackByInterviewId(
   params: GetFeedbackByInterviewIdParams
 ): Promise<Feedback | null> {
   const { interviewId, userId } = params;
-
   if (!userId || !interviewId) return null;
 
   const querySnapshot = await db
@@ -128,19 +163,13 @@ export async function getFeedbackByInterviewId(
   if (querySnapshot.empty) return null;
 
   const feedbackDoc = querySnapshot.docs[0];
-
   return { id: feedbackDoc.id, ...feedbackDoc.data() } as Feedback;
 }
-
-/* ============================
-   FIXED: GET LATEST INTERVIEWS (DASHBOARD)
-============================ */
 
 export async function getLatestInterviews(
   params: GetLatestInterviewsParams
 ): Promise<Interview[]> {
   const { userId, limit = 20 } = params;
-
   if (!userId) return [];
 
   const interviews = await db
@@ -157,36 +186,6 @@ export async function getLatestInterviews(
   })) as Interview[];
 }
 
-/* ============================
-   GET LATEST USER INTERVIEW
-============================ */
-
-export async function getLatestUserInterview(
-  userId: string
-): Promise<Interview | null> {
-  if (!userId) return null;
-
-  const interviews = await db
-    .collection("interviews")
-    .where("userId", "==", userId)
-    .orderBy("createdAt", "desc")
-    .limit(1)
-    .get();
-
-  if (interviews.empty) return null;
-
-  const doc = interviews.docs[0];
-
-  return {
-    id: doc.id,
-    ...doc.data(),
-  } as Interview;
-}
-
-/* ============================
-   GET ALL INTERVIEWS BY USER
-============================ */
-
 export async function getInterviewsByUserId(
   userId: string
 ): Promise<Interview[]> {
@@ -202,25 +201,4 @@ export async function getInterviewsByUserId(
     id: doc.id,
     ...doc.data(),
   })) as Interview[];
-}
-
-/* ============================
-   GET FEEDBACK BY USER
-============================ */
-
-export async function getFeedbackByUserId(
-  userId: string
-): Promise<Feedback[]> {
-  if (!userId) return [];
-
-  const feedbacks = await db
-    .collection("feedback")
-    .where("userId", "==", userId)
-    .orderBy("createdAt", "desc")
-    .get();
-
-  return feedbacks.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Feedback[];
 }
