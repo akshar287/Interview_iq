@@ -113,22 +113,22 @@ export async function getFeedbackByInterviewId({
   userId,
 }: GetFeedbackByInterviewIdParams): Promise<Feedback | null> {
   try {
-    // Avoid needing a composite index (interviewId + userId).
+    // Fetch feedback documents for this interview and return the latest one.
+    // Since each interview belongs to a single user, filtering only by
+    // interviewId is enough to get the correct feedback while keeping
+    // Firestore indexes simple.
     const snap = await db
       .collection("feedback")
       .where("interviewId", "==", interviewId)
       .get();
 
-    const userMatches = snap.docs
-      .map((d) => ({ id: d.id, data: d.data() }))
-      .filter((d) => d.data?.userId === userId)
-      .map((d) => asFeedback(d.id, d.data));
+    const feedbackItems = snap.docs.map((d) => asFeedback(d.id, d.data()));
 
-    userMatches.sort(
+    feedbackItems.sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
-    return userMatches[0] ?? null;
+    return feedbackItems[0] ?? null;
   } catch (error) {
     console.error("getFeedbackByInterviewId error:", error);
     return null;
