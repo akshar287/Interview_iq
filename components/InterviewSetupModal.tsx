@@ -107,59 +107,61 @@ export default function InterviewSetupModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-black/80 via-black/70 to-slate-900/90 backdrop-blur-md p-4 sm:p-6">
             <div
-                className="relative w-full max-w-md bg-[#1a1c20] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+                className="relative w-full max-w-md rounded-3xl border border-white/10 bg-gradient-to-b from-[#20232d] via-[#151721] to-[#0d0f15] shadow-[0_24px_80px_rgba(0,0,0,0.9)] overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-start justify-between p-6 border-b border-white/10">
+                <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-white/10 bg-gradient-to-r from-white/5 via-transparent to-white/5">
                     <div>
-                        <h2 className="text-xl font-bold text-white !text-xl !font-bold">Start Your Interview</h2>
-                        <p className="text-sm text-gray-400 mt-1">
+                        <h2 className="text-xl font-semibold text-white tracking-tight">
+                            Start Your Interview
+                        </h2>
+                        <p className="text-xs sm:text-sm text-gray-400 mt-1 max-w-xs">
                             Provide your details to begin your AI-powered interview
                         </p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-white transition-colors ml-4 mt-1 text-xl leading-none"
+                        className="ml-4 mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white transition-colors text-base leading-none"
                     >
                         ✕
                     </button>
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-5">
+                <form onSubmit={handleSubmit} className="p-6 pt-5 flex flex-col gap-5">
                     {/* Full Name */}
                     <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold text-white">
+                        <label className="text-xs font-medium uppercase tracking-[0.16em] text-gray-400">
                             Full Name <span className="text-red-400">*</span>
                         </label>
-                        <div className="flex items-center gap-3 bg-[#27282f] rounded-xl px-4 py-3 border border-white/10 focus-within:border-primary-200 transition-colors">
-                            <span className="text-gray-400 text-base">👤</span>
+                        <div className="flex items-center gap-3 bg-[#23252f]/90 hover:bg-[#262835] rounded-xl px-4 py-3 border border-white/10 focus-within:border-primary-200/80 focus-within:ring-2 focus-within:ring-primary-200/30 focus-within:ring-offset-1 focus-within:ring-offset-[#111318] transition-all duration-150">
+                            <span className="text-gray-400 text-base shrink-0">👤</span>
                             <input
                                 type="text"
                                 placeholder="Enter your full name"
                                 value={form.fullName}
                                 onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                                 required
-                                className="bg-transparent text-white flex-1 outline-none text-sm placeholder:text-gray-500"
+                                className="bg-transparent text-white flex-1 outline-none text-sm placeholder:text-gray-500/80"
                             />
                         </div>
                     </div>
 
                     {/* Position */}
                     <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold text-white">
+                        <label className="text-xs font-medium uppercase tracking-[0.16em] text-gray-400">
                             Position Applying For <span className="text-red-400">*</span>
                         </label>
-                        <div className="flex items-center gap-3 bg-[#27282f] rounded-xl px-4 py-3 border border-white/10 focus-within:border-primary-200 transition-colors">
-                            <span className="text-gray-400 text-base">💼</span>
+                        <div className="flex items-center gap-3 bg-[#23252f] rounded-xl px-4 py-3 border border-white/10 hover:bg-[#262835] focus-within:border-primary-200/80 focus-within:ring-2 focus-within:ring-primary-200/30 focus-within:ring-offset-1 focus-within:ring-offset-[#111318] transition-all duration-150">
+                            <span className="text-gray-400 text-base shrink-0">💼</span>
                             <select
                                 value={form.position}
                                 onChange={(e) => setForm({ ...form, position: e.target.value })}
                                 required
-                                className="bg-transparent text-white flex-1 outline-none text-sm appearance-none cursor-pointer"
+                                className="bg-transparent text-white flex-1 outline-none text-sm appearance-none cursor-pointer pr-6"
                             >
                                 <option value="" disabled className="bg-[#27282f]">Select a position</option>
                                 {POSITIONS.map((p) => (
@@ -172,16 +174,16 @@ export default function InterviewSetupModal({
 
                     {/* Experience */}
                     <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold text-white">
+                        <label className="text-xs font-medium uppercase tracking-[0.16em] text-gray-400">
                             Years of Experience <span className="text-red-400">*</span>
                         </label>
-                        <div className="flex items-center gap-3 bg-[#27282f] rounded-xl px-4 py-3 border border-white/10 focus-within:border-primary-200 transition-colors">
-                            <span className="text-gray-400 text-base">🕐</span>
+                        <div className="flex items-center gap-3 bg-[#23252f] rounded-xl px-4 py-3 border border-white/10 hover:bg-[#262835] focus-within:border-primary-200/80 focus-within:ring-2 focus-within:ring-primary-200/30 focus-within:ring-offset-1 focus-within:ring-offset-[#111318] transition-all duration-150">
+                            <span className="text-gray-400 text-base shrink-0">🕐</span>
                             <select
                                 value={form.experience}
                                 onChange={(e) => setForm({ ...form, experience: e.target.value })}
                                 required
-                                className="bg-transparent text-white flex-1 outline-none text-sm appearance-none cursor-pointer"
+                                className="bg-transparent text-white flex-1 outline-none text-sm appearance-none cursor-pointer pr-6"
                             >
                                 <option value="" disabled className="bg-[#27282f]">Select experience level</option>
                                 {EXPERIENCE_LEVELS.map((lvl) => (
@@ -194,12 +196,12 @@ export default function InterviewSetupModal({
 
                     {/* Resume */}
                     <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold text-white">
+                        <label className="text-xs font-medium uppercase tracking-[0.16em] text-gray-400">
                             Resume <span className="text-gray-400 font-normal">(Optional)</span>
                         </label>
                         <div
                             onClick={() => fileInputRef.current?.click()}
-                            className="border-2 border-dashed border-white/20 rounded-xl p-5 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary-200/60 transition-colors"
+                            className="border-2 border-dashed border-white/15 rounded-2xl p-5 flex flex-col items-center justify-center gap-2 cursor-pointer bg-[#181a22]/60 hover:border-primary-200/60 hover:bg-[#1f2230] transition-all duration-150"
                         >
                             <input
                                 ref={fileInputRef}
@@ -211,32 +213,38 @@ export default function InterviewSetupModal({
                             {resumeFile ? (
                                 <>
                                     <span className="text-2xl">📄</span>
-                                    <p className="text-sm text-primary-200 font-medium text-center">{resumeFile.name}</p>
-                                    <p className="text-xs text-gray-400">Click to change</p>
+                                    <p className="text-sm text-primary-200 font-medium text-center line-clamp-1">
+                                        {resumeFile.name}
+                                    </p>
+                                    <p className="text-xs text-gray-400">Click to change file</p>
                                 </>
                             ) : (
                                 <>
                                     <span className="text-2xl text-gray-400">⬆</span>
-                                    <p className="text-sm text-white font-medium">Click to upload or drag and drop</p>
-                                    <p className="text-xs text-gray-400">PDF, DOC, DOCX up to 10MB</p>
+                                    <p className="text-sm text-white font-medium">
+                                        Click to upload or drag and drop
+                                    </p>
+                                    <p className="text-xs text-gray-400">
+                                        PDF, DOC, DOCX up to 10MB
+                                    </p>
                                 </>
                             )}
                         </div>
                     </div>
 
                     {/* Buttons */}
-                    <div className="flex gap-3 mt-1">
+                    <div className="flex gap-3 mt-2 pt-1">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 py-3 rounded-xl font-semibold text-white bg-[#27282f] hover:bg-[#3a3b44] transition-colors border border-white/10"
+                            className="flex-1 py-3 rounded-xl font-medium text-sm sm:text-[0.9rem] text-gray-200 bg-[#1b1d26] hover:bg-[#242735] border border-white/15 hover:border-white/25 transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="flex-1 py-3 rounded-xl font-semibold text-dark-100 bg-primary-200 hover:bg-primary-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="flex-1 py-3 rounded-xl font-semibold text-sm sm:text-[0.9rem] text-dark-100 bg-gradient-to-r from-primary-200 to-primary-100 hover:from-primary-100 hover:to-primary-50 flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(180,83,246,0.45)] hover:shadow-[0_0_32px_rgba(192,132,252,0.7)] transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none"
                         >
                             <span>📋</span>
                             {loading ? "Starting..." : "Start Interview"}
