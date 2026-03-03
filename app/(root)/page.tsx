@@ -7,10 +7,12 @@ import NewInterviewButton from "@/components/NewInterviewButton";
 
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import {
-  getFeedbackByUserId,
+  getFeedbackByInterviewId,
   getInterviewById,
   getInterviewsByUserId,
   getLatestInterviews,
+  getFeedbackByUserId,
+  getLatestUserInterview,
 } from "@/lib/actions/general.action";
 
 async function Home() {
