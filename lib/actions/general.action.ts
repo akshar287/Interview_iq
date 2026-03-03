@@ -1,26 +1,15 @@
 "use server";
 
 import { generateObject } from "ai";
-import { groq } from "@ai-sdk/groq";
+import { google } from "@ai-sdk/google";
+
 import { db } from "@/firebase/admin";
 import { feedbackSchema } from "@/constants";
-
-/* ============================
-   CREATE FEEDBACK
-============================ */
 
 export async function createFeedback(params: CreateFeedbackParams) {
   const { interviewId, userId, transcript, feedbackId, analysis } = params;
 
   try {
-    if (!interviewId || !userId) {
-      throw new Error("Missing interviewId or userId");
-    }
-
-    /* ============================
-       FORMAT TRANSCRIPT
-    ============================ */
-
     const formattedTranscript =
       transcript && transcript.length > 0
         ? transcript
@@ -31,223 +20,174 @@ export async function createFeedback(params: CreateFeedbackParams) {
           .join("")
         : "The candidate did not say anything or provide any responses.";
 
-    /* ============================
-       FACIAL ANALYSIS (SAFE)
-    ============================ */
+    const facialAnalysisData = analysis
+      ? `\nAdditionally, real-time facial analysis during the interview showed:
+         - Average Eye Contact: ${analysis.avgEyeContact.toFixed(1)}%
+         - Confidence/Engagement Level: ${analysis.avgConfidence.toFixed(1)}%
+         Use these metrics to help inform your "Confidence & Clarity" score and provide tips for better physical engagement.`
+      : "";
 
-    const facialAnalysisData =
-      analysis &&
-        typeof analysis.avgEyeContact === "number" &&
-        typeof analysis.avgConfidence === "number"
-        ? `
-Additionally, real-time facial analysis during the interview showed:
-- Average Eye Contact: ${analysis.avgEyeContact.toFixed(1)}%
-- Confidence/Engagement Level: ${analysis.avgConfidence.toFixed(1)}%
-Use these metrics to help inform your "Confidence & Clarity" score and provide tips for better physical engagement.
-`
-        : "";
-
-    /* ============================
-       GENERATE AI FEEDBACK
-    ============================ */
-
+    console.log("GENERATING AI FEEDBACK FOR:", { interviewId, userId });
     const { object } = await generateObject({
-      model: groq("llama-3.3-70b-versatile"),
+      model: google("gemini-1.5-flash-latest"),
       schema: feedbackSchema,
-      system:
-        "You are a strict and professional interviewer analyzing a mock interview. Be detailed and critical.",
       prompt: `
-You are evaluating a mock interview.
+        You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Don't be lenient with the candidate. If there are mistakes or areas for improvement, point them out.
+        Transcript:
+        ${formattedTranscript}
+        ${facialAnalysisData}
 
-Transcript:
-${formattedTranscript}
-
-${facialAnalysisData}
-
-Score the candidate from 0–100 in ONLY the following categories:
-- Communication Skills
-- Technical Knowledge
-- Problem-Solving
-- Cultural & Role Fit
-- Confidence & Clarity
-
-Do NOT add extra categories.
-Provide strengths, areas for improvement, and a final professional assessment.
-`,
+        Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided:
+        - **Communication Skills**: Clarity, articulation, structured responses.
+        - **Technical Knowledge**: Understanding of key concepts for the role.
+        - **Problem-Solving**: Ability to analyze problems and propose solutions.
+        - **Cultural & Role Fit**: Alignment with company values and job role.
+        - **Confidence & Clarity**: Confidence in responses, engagement, and clarity.
+        `,
+      system:
+        "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
     });
 
-    /* ============================
-       VALIDATE AI RESPONSE
-    ============================ */
-
-    if (!object?.totalScore || !object?.categoryScores) {
-      throw new Error("Invalid AI response structure");
-    }
-
-    /* ============================
-       PREPARE FEEDBACK OBJECT
-    ============================ */
+    console.log("AI FEEDBACK OBJECT RECEIVED:", JSON.stringify(object, null, 2));
 
     const feedback = {
-      interviewId,
-      userId,
+      interviewId: interviewId,
+      userId: userId,
       totalScore: object.totalScore,
       categoryScores: object.categoryScores,
-      strengths: object.strengths ?? [],
-      areasForImprovement: object.areasForImprovement ?? [],
-      finalAssessment: object.finalAssessment ?? "",
+      strengths: object.strengths,
+      areasForImprovement: object.areasForImprovement,
+      finalAssessment: object.finalAssessment,
       createdAt: new Date().toISOString(),
     };
 
-    /* ============================
-       SAVE TO FIRESTORE
-    ============================ */
+    let feedbackRef;
 
-    const feedbackRef = feedbackId
-      ? db.collection("feedback").doc(feedbackId)
-      : db.collection("feedback").doc();
+    if (feedbackId) {
+      feedbackRef = db.collection("feedback").doc(feedbackId);
+    } else {
+      feedbackRef = db.collection("feedback").doc();
+    }
 
+    console.log("SAVING FEEDBACK TO DOC:", feedbackRef.id);
     await feedbackRef.set(feedback);
 
-    /* ============================
-       MARK INTERVIEW FINALIZED
-    ============================ */
-
+    console.log("Updating interview finalized status for:", interviewId);
     await db.collection("interviews").doc(interviewId).update({
       finalized: true,
     });
 
     return { success: true, feedbackId: feedbackRef.id };
   } catch (error: any) {
-    console.error("ERROR CREATING FEEDBACK:", error?.message || error);
-    return { success: false, error: error?.message };
+    console.error("CRITICAL ERROR SAVING FEEDBACK:", error?.message || error);
+    return { success: false };
   }
 }
 
-/* ============================
-   GET INTERVIEW BY ID
-============================ */
-
-export async function getInterviewById(
-  id: string
-): Promise<Interview | null> {
-  if (!id) return null;
-
+export async function getInterviewById(id: string): Promise<Interview | null> {
   const interview = await db.collection("interviews").doc(id).get();
+
   if (!interview.exists) return null;
 
   return { id: interview.id, ...interview.data() } as Interview;
 }
-
-/* ============================
-   GET FEEDBACK BY INTERVIEW
-============================ */
 
 export async function getFeedbackByInterviewId(
   params: GetFeedbackByInterviewIdParams
 ): Promise<Feedback | null> {
   const { interviewId, userId } = params;
 
-  if (!interviewId || !userId) return null;
+  if (!userId || !interviewId) return null;
 
-  const snapshot = await db
+  const querySnapshot = await db
     .collection("feedback")
     .where("interviewId", "==", interviewId)
     .where("userId", "==", userId)
     .limit(1)
     .get();
 
-  if (snapshot.empty) return null;
+  if (querySnapshot.empty) return null;
 
-  const doc = snapshot.docs[0];
-  return { id: doc.id, ...doc.data() } as Feedback;
+  const feedbackDoc = querySnapshot.docs[0];
+  return { id: feedbackDoc.id, ...feedbackDoc.data() } as Feedback;
 }
-
-/* ============================
-   GET LATEST PUBLIC INTERVIEWS
-============================ */
 
 export async function getLatestInterviews(
   params: GetLatestInterviewsParams
-): Promise<Interview[]> {
+): Promise<Interview[] | null> {
   const { userId, limit = 20 } = params;
 
   if (!userId) return [];
 
-  const snapshot = await db
+  const interviews = await db
     .collection("interviews")
-    .where("finalized", "==", true)
     .orderBy("createdAt", "desc")
-    .limit(limit)
+    .limit(limit + 20)
     .get();
 
-  return snapshot.docs
-    .map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }))
-    .filter((interview) => interview.userId !== userId) as Interview[];
-}
+  const formattedInterviews = interviews.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Interview[];
 
-/* ============================
-   GET LATEST USER INTERVIEW
-============================ */
+  return formattedInterviews
+    .filter(
+      (interview) => interview.userId !== userId && interview.finalized === true
+    )
+    .slice(0, limit);
+}
 
 export async function getLatestUserInterview(
   userId: string
 ): Promise<Interview | null> {
   if (!userId) return null;
 
-  const snapshot = await db
+  const interviews = await db
     .collection("interviews")
     .where("userId", "==", userId)
     .orderBy("createdAt", "desc")
     .limit(1)
     .get();
 
-  if (snapshot.empty) return null;
+  if (interviews.empty) return null;
 
-  const doc = snapshot.docs[0];
-  return { id: doc.id, ...doc.data() } as Interview;
+  const doc = interviews.docs[0];
+  return {
+    id: doc.id,
+    ...doc.data(),
+  } as Interview;
 }
-
-/* ============================
-   GET ALL USER INTERVIEWS
-============================ */
 
 export async function getInterviewsByUserId(
   userId: string
-): Promise<Interview[]> {
+): Promise<Interview[] | null> {
   if (!userId) return [];
 
-  const snapshot = await db
+  const interviews = await db
     .collection("interviews")
     .where("userId", "==", userId)
-    .orderBy("createdAt", "desc")
     .get();
 
-  return snapshot.docs.map((doc) => ({
+  const formatted = interviews.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
   })) as Interview[];
+
+  return formatted.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 }
-
-/* ============================
-   GET ALL USER FEEDBACK
-============================ */
-
 export async function getFeedbackByUserId(
   userId: string
-): Promise<Feedback[]> {
+): Promise<Feedback[] | null> {
   if (!userId) return [];
 
-  const snapshot = await db
+  const feedbacks = await db
     .collection("feedback")
     .where("userId", "==", userId)
-    .orderBy("createdAt", "desc")
     .get();
 
-  return snapshot.docs.map((doc) => ({
+  return feedbacks.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
   })) as Feedback[];
