@@ -10,6 +10,7 @@ import { interviewer } from "@/constants";
 import {
   createFeedback,
   getInterviewsByUserId,
+  getInterviewById,
 } from "@/lib/actions/general.action";
 import { toast } from "sonner";
 import CameraModule from "./CameraModule";
@@ -155,13 +156,12 @@ const Agent = ({
           toast.loading(`Waiting for AI (Attempt ${attempts}/${maxAttempts})...`, { id: toastId });
 
           try {
-            const userInterviews = await getInterviewsByUserId(userId!);
-            if (userInterviews && userInterviews.length > 0) {
-              const latestId = userInterviews[0].id;
-              console.log("Found profile!", latestId);
+            const currentInterview = await getInterviewById(interviewId!);
+            if (currentInterview && currentInterview.finalized) {
+              console.log("Interview finalized!", interviewId);
               clearInterval(interval);
               toast.success("Profile created! Redirecting...", { id: toastId });
-              router.push(`/interview/${latestId}`);
+              router.push(`/interview/${interviewId}`);
             } else if (attempts >= maxAttempts) {
               clearInterval(interval);
               toast.error("Timed out waiting for profile. Please check /diag for webhook logs.", { id: toastId });
@@ -181,25 +181,31 @@ const Agent = ({
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
 
-    if (type === "generate") {
-      const vapiId = process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID || process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
-      console.log("VAPI START (GENERATE):", { vapiId, userName, userId });
+    // Common metadata for both types
+    const callMetadata = {
+      userId: userId,
+      interviewId: interviewId,
+    };
 
-      if (!vapiId) {
-        toast.error("Vapi Generation ID is missing in .env!");
+    if (type === "generate") {
+      // Use process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID as the primary ID for the Assistant
+      const vapiAssistantId = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
+      console.log("VAPI START (ASSISTANT):", { vapiAssistantId, userName, userId, interviewId });
+
+      if (!vapiAssistantId) {
+        toast.error("Vapi Assistant ID is missing in .env!");
+        setCallStatus(CallStatus.INACTIVE);
         return;
       }
 
-      await vapi.start(vapiId, {
+      await vapi.start(vapiAssistantId, {
         variableValues: {
           username: userName,
           userid: userId,
           role: interviewPosition || "",
           level: interviewExperience || "",
         },
-        metadata: {
-          userid: userId,
-        }
+        metadata: callMetadata
       });
     } else {
       let formattedQuestions = "";
@@ -209,10 +215,12 @@ const Agent = ({
           .join("\n");
       }
 
+      console.log("VAPI START (MOCK):", { interviewer, interviewId, userId });
       await vapi.start(interviewer, {
         variableValues: {
           questions: formattedQuestions,
         },
+        metadata: callMetadata
       });
     }
   };

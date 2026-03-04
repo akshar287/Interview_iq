@@ -1,123 +1,121 @@
-import { createFeedback } from "@/lib/actions/general.action"; // adjust path if needed
+import { generateText } from "ai";
+import { google } from "@ai-sdk/google";
+
 import { db } from "@/firebase/admin";
+import { getRandomInterviewCover } from "@/lib/utils";
 
 export async function POST(request: Request) {
   let body: any;
-
   try {
     body = await request.json();
   } catch (e) {
-    console.error("Invalid JSON received from Vapi");
-    return Response.json(
-      { success: false, error: "Invalid JSON" },
-      { status: 400 }
-    );
+    return Response.json({ success: false, error: "Invalid JSON" }, { status: 400 });
+  }
+
+  // Log raw body to Firestore for debugging
+  try {
+    await db.collection("vapi_debug_logs").add({
+      receivedAt: new Date().toISOString(),
+      payload: body,
+      vapiMessageType: body.message?.type || "direct_post",
+    });
+  } catch (logError) {
+    console.error("FAILED TO LOG VAPI PAYLOAD:", logError);
   }
 
   console.log("VAPI WEBHOOK RECEIVED");
 
   const message = body.message;
+  if (!message) return Response.json({ success: false, error: "No message found" }, { status: 400 });
 
-  if (!message) {
-    console.error("No message object found");
-    return Response.json(
-      { success: false, error: "No message found" },
-      { status: 400 }
-    );
-  }
-
-  // ✅ Only process final report
+  // ONLY trigger interview generation on end-of-call-report
   if (message.type !== "end-of-call-report") {
-    console.log("Ignoring message type:", message.type);
-    return Response.json({ success: true });
+    console.log(`Ignoring Vapi message type: ${message.type}`);
+    return Response.json({ success: true, message: `Ignored message type: ${message.type}` }, { status: 200 });
   }
 
-  console.log("Processing END-OF-CALL-REPORT");
+  console.log("PROCESSING END-OF-CALL-REPORT...");
+
+  // Robust parsing of variables and metadata
+  const variables = message.variableValues || message.call?.variableValues || message.call?.assistantOverrides?.variableValues || {};
+  const metadata = message.metadata || message.call?.metadata || message.assistant?.metadata || {};
+
+  // Extract interviewId and userId from metadata (prioritize camelCase)
+  const interviewId = metadata.interviewId || metadata.interviewid || variables.interviewId || variables.interviewid;
+  const userId = metadata.userId || metadata.userid || variables.userId || variables.userid || "anonymous";
+
+  if (!interviewId) {
+    console.error("Missing interviewId in metadata/variables");
+    return Response.json({ success: false, error: "Missing interviewId" }, { status: 400 });
+  }
+
+  console.log("Processing Interview:", { interviewId, userId });
+
+  const role = variables.role || "Software Engineer";
+  const type = variables.type || "technical";
+  const level = variables.level || "Senior";
+  const techstackStr = variables.techstack || "Next.js, Tailwind CSS";
+  const amount = variables.amount || "5";
 
   try {
-    // ===============================
-    // 1️⃣ Extract Transcript
-    // ===============================
-    const transcript =
-      message.transcript ||
-      message.call?.transcript ||
-      [];
+    // Check if interview already finalized
+    const interviewDocRef = db.collection("interviews").doc(interviewId);
+    const interviewDoc = await interviewDocRef.get();
 
-    // ===============================
-    // 2️⃣ Extract Metadata
-    // ===============================
-    const metadata =
-      message.metadata ||
-      message.call?.metadata ||
-      {};
-
-    const interviewId = metadata.interviewId;
-    const userId = metadata.userId;
-
-    if (!interviewId || !userId) {
-      console.error("Missing interviewId or userId in metadata");
-      return Response.json(
-        { success: false, error: "Missing metadata" },
-        { status: 400 }
-      );
+    if (interviewDoc.exists && interviewDoc.data()?.finalized) {
+      console.log("Interview already finalized. Skipping AI generation.");
+      return Response.json({ success: true, message: "Already finalized" }, { status: 200 });
     }
 
-    console.log("Interview ID:", interviewId);
-    console.log("User ID:", userId);
-
-    // ===============================
-    // 3️⃣ Prevent Duplicate Feedback
-    // ===============================
-    const existingFeedback = await db
-      .collection("feedback")
-      .where("interviewId", "==", interviewId)
-      .where("userId", "==", userId)
-      .limit(1)
-      .get();
-
-    if (!existingFeedback.empty) {
-      console.log("Feedback already exists. Skipping generation.");
-      return Response.json({ success: true, message: "Already processed" });
-    }
-
-    // ===============================
-    // 4️⃣ Generate Feedback
-    // ===============================
-
-
-    const result = await createFeedback({
-      interviewId,
-      userId,
-      transcript,
-      // ✅ real data
+    console.log("GENERATING QUESTIONS WITH AI...");
+    const { text: questions } = await generateText({
+      model: google("gemini-1.5-flash-latest"),
+      prompt: `Prepare exactly ${amount} interview questions for a ${level} level ${role} role.
+        The tech stack is: ${techstackStr}.
+        Focus: ${type} questions.
+        Return ONLY a JSON array of strings. Do not include any other text or markdown formatting.
+        Example: ["Question 1", "Question 2"]
+    `,
     });
 
-    if (!result.success) {
-      console.error("Feedback generation failed");
-      return Response.json(
-        { success: false, error: "Feedback generation failed" },
-        { status: 500 }
-      );
+    console.log("AI QUESTIONS RECEIVED");
+
+    let parsedQuestions = [];
+    try {
+      const cleanJson = questions.replace(/```json/g, "").replace(/```/g, "").trim();
+      parsedQuestions = JSON.parse(cleanJson);
+    } catch (e) {
+      console.error("JSON PARSE ERROR, using fallback questions");
+      parsedQuestions = [
+        "Can you describe your experience with this tech stack?",
+        "What is the most challenging project you've worked on recently?",
+        "How do you stay up-to-date with new technologies?"
+      ];
     }
 
-    console.log("Feedback successfully generated:", result.feedbackId);
+    const interviewUpdateData = {
+      role: role,
+      type: type,
+      level: level,
+      techstack: typeof techstackStr === "string" ? techstackStr.split(",").map((s: string) => s.trim()) : techstackStr,
+      questions: parsedQuestions,
+      userId: userId,
+      finalized: true,
+      coverImage: getRandomInterviewCover(),
+      updatedAt: new Date().toISOString(),
+    };
 
-    return Response.json({
-      success: true,
-      feedbackId: result.feedbackId,
-    });
+    console.log("UPDATING INTERVIEW:", interviewId);
+    await interviewDocRef.update(interviewUpdateData);
+    console.log("INTERVIEW UPDATED SUCCESS:", interviewId);
+
+    return Response.json({ success: true, id: interviewId }, { status: 200 });
   } catch (error: any) {
-    console.error("CRITICAL WEBHOOK ERROR:", error?.message || error);
-    return Response.json(
-      { success: false, error: error?.message || "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("WEBHOOK PROCESSING ERROR:", error?.message || error);
+    return Response.json({ success: false, error: error?.message || error }, { status: 500 });
   }
 }
 
 export async function GET() {
-  return Response.json({
-    success: true,
-    message: "Vapi webhook endpoint is active",
-  });
+  return Response.json({ success: true, message: "Webhook endpoint is active" }, { status: 200 });
 }

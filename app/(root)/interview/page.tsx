@@ -14,6 +14,7 @@ const Page = async ({ searchParams }: PageProps) => {
   const position = params.position || "";
   const experience = params.experience || "";
   const fullName = params.fullName || user?.name || "";
+  const interviewId = params.interviewId || "";
 
   return (
     <>
@@ -32,6 +33,7 @@ const Page = async ({ searchParams }: PageProps) => {
       <Agent
         userName={fullName || user?.name!}
         userId={user?.id}
+        interviewId={interviewId}
         type="generate"
         interviewPosition={position}
         interviewExperience={experience}

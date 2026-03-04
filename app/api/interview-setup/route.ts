@@ -14,16 +14,20 @@ export async function POST(req: NextRequest) {
         }
 
         // Save the interview setup form data to Firestore
-        const docRef = await db.collection("interview_setups").add({
+        const docRef = await db.collection("interviews").add({
             userId,
             fullName,
+            role: position,
             position,
             experience,
+            techstack: [], // Initial empty techstack, can be updated later
+            type: "Technical",
+            finalized: false,
             resumeFileName: resumeFileName || null,
             createdAt: createdAt || new Date().toISOString(),
         });
 
-        console.log(`Interview setup saved for user ${userId}: ${docRef.id}`);
+        console.log(`Interview saved to 'interviews' collection for user ${userId}: ${docRef.id}`);
 
         return NextResponse.json({ success: true, setupId: docRef.id });
     } catch (error: any) {

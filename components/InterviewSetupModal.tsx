@@ -91,12 +91,12 @@ export default function InterviewSetupModal({
             toast.success("Profile saved! Starting interview...", { id: toastId });
             onClose();
 
-            // Pass the position and experience to the interview page as URL params
-            // so Vapi can ask role/level-specific questions
+            // Pass the position, experience, and new interviewId to the interview page
             const params = new URLSearchParams({
                 position: form.position,
                 experience: form.experience,
                 fullName: form.fullName,
+                interviewId: data.setupId,
             });
             router.push(`/interview?${params.toString()}`);
         } catch (err: any) {
