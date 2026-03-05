@@ -62,6 +62,7 @@ const Agent = ({
     };
 
     const onCallEnd = () => {
+      console.log("Call ended.");
       setCallStatus(CallStatus.FINISHED);
     };
 
@@ -82,8 +83,10 @@ const Agent = ({
       setIsSpeaking(false);
     };
 
-    const onError = (error: Error) => {
-      console.log("Error:", error);
+    const onError = (error: any) => {
+      console.error("VAPI FULL ERROR:", error);
+      toast.error(error?.message || "An error occurred with the voice assistant.");
+      setCallStatus(CallStatus.INACTIVE);
     };
 
     vapi.on("call-start", onCallStart);
@@ -189,49 +192,55 @@ const Agent = ({
   }, [messages, callStatus, feedbackId, interviewId, router, type, userId, metrics, interviewPosition, interviewExperience]);
 
   const handleCall = async () => {
-    setCallStatus(CallStatus.CONNECTING);
+    try {
+      setCallStatus(CallStatus.CONNECTING);
 
-    // Common metadata for both types
-    const callMetadata = {
-      userId: userId,
-      interviewId: interviewId,
-    };
+      // Common metadata for both types
+      const callMetadata = {
+        userId: userId,
+        interviewId: interviewId,
+      };
 
-    if (type === "generate") {
-      // Use process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID as the primary ID for the Assistant
-      const vapiAssistantId = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
-      console.log("VAPI START (ASSISTANT):", { vapiAssistantId, userName, userId, interviewId });
+      if (type === "generate") {
+        // Use process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID as the primary ID for the Assistant
+        const vapiAssistantId = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
+        console.log("VAPI START (ASSISTANT):", { vapiAssistantId, userName, userId, interviewId });
 
-      if (!vapiAssistantId) {
-        toast.error("Vapi Assistant ID is missing in .env!");
-        setCallStatus(CallStatus.INACTIVE);
-        return;
+        if (!vapiAssistantId) {
+          toast.error("Vapi Assistant ID is missing in .env!");
+          setCallStatus(CallStatus.INACTIVE);
+          return;
+        }
+
+        await vapi.start(vapiAssistantId, {
+          variableValues: {
+            username: userName,
+            userid: userId,
+            role: interviewPosition || "",
+            level: interviewExperience || "",
+          },
+          metadata: callMetadata
+        });
+      } else {
+        let formattedQuestions = "";
+        if (questions) {
+          formattedQuestions = questions
+            .map((question) => `- ${question}`)
+            .join("\n");
+        }
+
+        console.log("VAPI START (MOCK):", { interviewer, interviewId, userId });
+        await vapi.start(interviewer, {
+          variableValues: {
+            questions: formattedQuestions,
+          },
+          metadata: callMetadata
+        });
       }
-
-      await vapi.start(vapiAssistantId, {
-        variableValues: {
-          username: userName,
-          userid: userId,
-          role: interviewPosition || "",
-          level: interviewExperience || "",
-        },
-        metadata: callMetadata
-      });
-    } else {
-      let formattedQuestions = "";
-      if (questions) {
-        formattedQuestions = questions
-          .map((question) => `- ${question}`)
-          .join("\n");
-      }
-
-      console.log("VAPI START (MOCK):", { interviewer, interviewId, userId });
-      await vapi.start(interviewer, {
-        variableValues: {
-          questions: formattedQuestions,
-        },
-        metadata: callMetadata
-      });
+    } catch (error: any) {
+      console.error("Vapi Start Error:", error);
+      toast.error(error.message || "Failed to start the interview call.");
+      setCallStatus(CallStatus.INACTIVE);
     }
   };
 

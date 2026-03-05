@@ -33,7 +33,7 @@ export async function createFeedback(params: CreateFeedbackParams): Promise<Crea
     let object;
     try {
       const response = await generateObject({
-        model: google("gemini-1.5-flash-latest"),
+        model: google("gemini-1.5-flash-002"),
         schema: feedbackSchema,
         prompt: `
           You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed.
