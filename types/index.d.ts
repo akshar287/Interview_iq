@@ -103,3 +103,9 @@ interface InterviewFormProps {
 interface TechIconProps {
   techStack: string[];
 }
+
+interface CreateFeedbackResponse {
+  success: boolean;
+  feedbackId?: string;
+  error?: string;
+}

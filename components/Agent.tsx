@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
@@ -9,8 +9,6 @@ import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
 import {
   createFeedback,
-  getInterviewsByUserId,
-  getInterviewById,
 } from "@/lib/actions/general.action";
 import { toast } from "sonner";
 import CameraModule from "./CameraModule";
@@ -105,20 +103,26 @@ const Agent = ({
     };
   }, []);
 
+  const isGenerating = useRef(false);
+
   useEffect(() => {
     if (messages.length > 0) {
       setLastMessage(messages[messages.length - 1].content);
     }
 
     const handleGenerateFeedback = async (transcriptMessages: SavedMessage[]) => {
+      if (isGenerating.current) return;
+      isGenerating.current = true;
+
       const toastId = toast.loading("Analyzing your interview and generating feedback...");
       try {
         const avgEyeContact = metrics.count > 0 ? metrics.totalEyeContact / metrics.count : 70;
         const avgConfidence = metrics.count > 0 ? metrics.totalConfidence / metrics.count : 70;
 
         console.log("INTERVIEW ANALYTICS:", { avgEyeContact, avgConfidence, ticks: metrics.count });
+        console.log("TRANSCRIPT MESSAGES COUNT:", transcriptMessages.length);
 
-        const { success, feedbackId: id } = await createFeedback({
+        const { success, feedbackId: id, error } = await createFeedback({
           interviewId: interviewId!,
           userId: userId!,
           transcript: transcriptMessages,
@@ -133,50 +137,56 @@ const Agent = ({
           toast.success("Feedback generated successfully!", { id: toastId });
           router.push(`/interview/${interviewId}/feedback`);
         } else {
-          toast.error("Failed to generate feedback. Returning to dashboard.", { id: toastId });
+          toast.error(error || "Failed to generate feedback. Returning to dashboard.", { id: toastId });
+          isGenerating.current = false; // Allow retry if it failed logically (e.g. empty transcript)
           router.push("/");
         }
-      } catch (error) {
-        toast.error("An error occurred during feedback generation.", { id: toastId });
+      } catch (error: any) {
+        toast.error(error?.message || "An error occurred during feedback generation.", { id: toastId });
+        isGenerating.current = false;
+        router.push("/");
+      }
+    };
+
+    const handleGenerateInterview = async () => {
+      const toastId = toast.loading("Generating your interview questions with AI...");
+      try {
+        // Directly call our own API to generate questions — no Vapi webhook needed.
+        // This works both on localhost and in production.
+        const res = await fetch("/api/vapi/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            interviewId: interviewId!,
+            userId: userId!,
+            role: interviewPosition || "Software Engineer",
+            experience: interviewExperience || "entry",
+          }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          toast.success("Interview ready! Redirecting...", { id: toastId });
+          router.push(`/interview/${interviewId}`);
+        } else {
+          toast.error(data.error || "Failed to generate interview questions.", { id: toastId });
+          router.push("/");
+        }
+      } catch (error: any) {
+        toast.error("An error occurred while setting up the interview.", { id: toastId });
         router.push("/");
       }
     };
 
     if (callStatus === CallStatus.FINISHED) {
       if (type === "generate") {
-        const toastId = toast.loading("Finalizing your interview profile. This may take a few seconds...");
-
-        // Polling to wait for the background webhook to finish
-        let attempts = 0;
-        const maxAttempts = 15; // increased to 30 seconds total
-        const interval = setInterval(async () => {
-          attempts++;
-          const secondsLeft = (maxAttempts - attempts) * 2;
-          console.log(`Checking for new profile (Attempt ${attempts}/${maxAttempts})...`);
-          toast.loading(`Waiting for AI (Attempt ${attempts}/${maxAttempts})...`, { id: toastId });
-
-          try {
-            const currentInterview = await getInterviewById(interviewId!);
-            if (currentInterview && currentInterview.finalized) {
-              console.log("Interview finalized!", interviewId);
-              clearInterval(interval);
-              toast.success("Profile created! Redirecting...", { id: toastId });
-              router.push(`/interview/${interviewId}`);
-            } else if (attempts >= maxAttempts) {
-              clearInterval(interval);
-              toast.error("Timed out waiting for profile. Please check /diag for webhook logs.", { id: toastId });
-              console.warn("POLLING TIMED OUT. Check if vapi_debug_logs count increases at /diag.");
-              router.push("/");
-            }
-          } catch (error) {
-            console.error("Error polling for interview:", error);
-          }
-        }, 2000); // Check every 2 seconds
+        handleGenerateInterview();
       } else {
         handleGenerateFeedback(messages);
       }
     }
-  }, [messages, callStatus, feedbackId, interviewId, router, type, userId, metrics]);
+  }, [messages, callStatus, feedbackId, interviewId, router, type, userId, metrics, interviewPosition, interviewExperience]);
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);

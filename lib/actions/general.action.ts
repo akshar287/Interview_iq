@@ -6,7 +6,7 @@ import { google } from "@ai-sdk/google";
 import { db } from "@/firebase/admin";
 import { feedbackSchema } from "@/constants";
 
-export async function createFeedback(params: CreateFeedbackParams) {
+export async function createFeedback(params: CreateFeedbackParams): Promise<CreateFeedbackResponse> {
   const { interviewId, userId, transcript, feedbackId, analysis } = params;
 
   try {
@@ -28,27 +28,38 @@ export async function createFeedback(params: CreateFeedbackParams) {
       : "";
 
     console.log("GENERATING AI FEEDBACK FOR:", { interviewId, userId });
-    const { object } = await generateObject({
-      model: google("gemini-1.5-flash"),
-      schema: feedbackSchema,
-      prompt: `
-        You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Don't be lenient with the candidate. If there are mistakes or areas for improvement, point them out.
-        Transcript:
-        ${formattedTranscript}
-        ${facialAnalysisData}
+    console.log("TRANSCRIPT PREVIEW:", formattedTranscript.slice(0, 100));
 
-        Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided:
-        - **Communication Skills**: Clarity, articulation, structured responses.
-        - **Technical Knowledge**: Understanding of key concepts for the role.
-        - **Problem-Solving**: Ability to analyze problems and propose solutions.
-        - **Cultural & Role Fit**: Alignment with company values and job role.
-        - **Confidence & Clarity**: Confidence in responses, engagement, and clarity.
-        `,
-      system:
-        "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
-    });
+    let object;
+    try {
+      const response = await generateObject({
+        model: google("gemini-1.5-flash-latest"),
+        schema: feedbackSchema,
+        prompt: `
+          You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed.
+          
+          Transcript:
+          ${formattedTranscript}
+          ${facialAnalysisData}
 
-    console.log("AI FEEDBACK OBJECT RECEIVED:", JSON.stringify(object, null, 2));
+          Please evaluate the candidate for these EXACT categories (use these exact names):
+          1. Communication Skills
+          2. Technical Knowledge
+          3. Problem-Solving
+          4. Cultural & Role Fit
+          5. Confidence & Clarity
+
+          Return a TotalScore (0-100) as a weighted average.
+          `,
+        system:
+          "You are a professional interviewer. You must evaluate the candidate using ONLY the five categories provided: 'Communication Skills', 'Technical Knowledge', 'Problem-Solving', 'Cultural & Role Fit', and 'Confidence & Clarity'.",
+      });
+      object = response.object;
+      console.log("AI FEEDBACK OBJECT RECEIVED SUCCESS");
+    } catch (aiError: any) {
+      console.error("AI GENERATION ERROR:", aiError?.message || aiError);
+      throw aiError; // Re-throw to be caught by the outer catch
+    }
 
     const feedback = {
       interviewId: interviewId,
@@ -80,7 +91,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
     return { success: true, feedbackId: feedbackRef.id };
   } catch (error: any) {
     console.error("CRITICAL ERROR SAVING FEEDBACK:", error?.message || error);
-    return { success: false };
+    return { success: false, error: error?.message || "Internal server error" };
   }
 }
 
