@@ -52,23 +52,30 @@ async function Home() {
 
   return (
     <>
-      <section className="card-cta">
-        <div className="flex flex-col gap-6 max-w-lg">
-          <h2>AI Enabled Personal Interview and Personality Analyser</h2>
-          <p className="text-lg">
-            Practice real interview questions & get instant feedback
+      <section className="glass-card flex flex-col md:flex-row items-center justify-between px-12 py-12 mb-12">
+        <div className="flex flex-col gap-6 max-w-lg text-left">
+          <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight">
+            AI Enabled Personal <br />
+            <span className="text-primary-200">Interview Analyser</span>
+          </h1>
+          <p className="text-lg text-white/50">
+            Practice real-world interview scenarios and receive instant,
+            data-driven feedback to accelerate your career growth.
           </p>
 
           <NewInterviewButton userId={user?.id!} userName={user?.name!} />
         </div>
 
-        <Image
-          src="/robot.png"
-          alt="robo-dude"
-          width={400}
-          height={400}
-          className="max-sm:hidden"
-        />
+        <div className="relative mt-8 md:mt-0">
+          <div className="absolute inset-0 bg-primary-200/20 blur-[80px] rounded-full animate-pulse" />
+          <Image
+            src="/robot.png"
+            alt="robo-dude"
+            width={350}
+            height={350}
+            className="relative z-10 drop-shadow-2xl"
+          />
+        </div>
       </section>
 
       <section className="flex flex-col gap-6 mt-8">

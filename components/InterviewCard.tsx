@@ -19,9 +19,9 @@ const InterviewCard = async ({
   const feedback =
     userId && interviewId
       ? await getFeedbackByInterviewId({
-          interviewId,
-          userId,
-        })
+        interviewId,
+        userId,
+      })
       : null;
 
   const normalizedType = /mix/gi.test(type) ? "Mixed" : type;
@@ -38,8 +38,8 @@ const InterviewCard = async ({
   ).format("MMM D, YYYY");
 
   return (
-    <div className="card-border w-[360px] max-sm:w-full min-h-96">
-      <div className="card-interview">
+    <div className="glass-card w-[360px] max-sm:w-full min-h-96 hover:border-primary-200/30 transition-all group">
+      <div className="flex flex-col h-full justify-between">
         <div>
           {/* Type Badge */}
           <div
