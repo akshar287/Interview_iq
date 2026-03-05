@@ -1,0 +1,612 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-success-100: #49de50;
+  --color-success-200: #42c748;
+  --color-destructive-100: #f75353;
+  --color-destructive-200: #c44141;
+
+  --color-primary-100: #dddfff;
+  --color-primary-200: #cac5fe;
+
+  --color-light-100: #d6e0ff;
+  --color-light-400: #6870a6;
+  --color-light-600: #4f557d;
+  --color-light-800: #24273a;
+
+  --color-dark-100: #020408;
+  --color-dark-200: #27282f;
+  --color-dark-300: #242633;
+
+  --font-mona-sans: "Mona Sans", sans-serif;
+
+  --bg-pattern: url("/pattern.png");
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: var(--light-100);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased min-h-screen;
+  }
+
+  p {
+    @apply text-light-100/90 leading-relaxed;
+  }
+
+  a {
+    @apply underline-offset-4 decoration-white/20;
+
+    &:hover {
+      @apply decoration-white/40;
+    }
+  }
+
+  hr {
+    @apply border-white/10;
+  }
+
+  h2 {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  ul {
+    @apply list-disc list-inside;
+  }
+
+  li {
+    @apply text-light-100/90;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-primary-200) 55%, black);
+    color: var(--color-dark-100);
+  }
+
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--color-primary-200) 70%, white);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .btn-call {
+    @apply inline-block px-7 py-3 font-bold text-sm leading-5 text-white transition-all duration-150 bg-success-100 border border-transparent rounded-full shadow-sm min-w-28 cursor-pointer items-center justify-center overflow-visible;
+
+    &:hover {
+      @apply shadow-lg -translate-y-0.5;
+    }
+
+    &:active {
+      @apply translate-y-0 bg-success-200;
+    }
+
+    .span {
+      @apply bg-success-100 h-[85%] w-[65%];
+    }
+  }
+
+  .btn-disconnect {
+    @apply inline-block px-7 py-3 text-sm font-bold leading-5 text-white transition-all duration-150 bg-destructive-100 border border-transparent rounded-full shadow-sm min-w-28;
+
+    &:hover {
+      @apply shadow-lg -translate-y-0.5;
+    }
+
+    &:active {
+      @apply translate-y-0 bg-destructive-200;
+    }
+  }
+
+  .btn-upload {
+    @apply flex min-h-14 w-full items-center justify-center gap-1.5 rounded-md;
+  }
+
+  .btn-primary {
+    @apply w-fit !bg-primary-200 !text-dark-100 !rounded-full !font-bold px-5 cursor-pointer min-h-10 transition-all;
+
+    &:hover {
+      @apply !bg-primary-200/85 -translate-y-0.5 shadow-lg;
+    }
+
+    &:active {
+      @apply translate-y-0;
+    }
+  }
+
+  .btn-secondary {
+    @apply w-fit !bg-dark-200/80 !text-primary-200 !rounded-full !font-bold px-5 cursor-pointer min-h-10 transition-all border border-white/10;
+
+    &:hover {
+      @apply !bg-dark-200 -translate-y-0.5 shadow-lg;
+    }
+
+    &:active {
+      @apply translate-y-0;
+    }
+  }
+
+  .btn-upload {
+    @apply bg-dark-200/75 rounded-full min-h-12 px-5 cursor-pointer border border-white/10 overflow-hidden transition-colors;
+
+    &:hover {
+      @apply bg-dark-200;
+    }
+  }
+
+  .card-border {
+    @apply border-gradient p-0.5 rounded-2xl w-fit transition-all duration-200;
+
+    &:hover {
+      @apply -translate-y-0.5 shadow-2xl;
+    }
+  }
+
+  .card {
+    @apply dark-gradient rounded-2xl min-h-full;
+  }
+
+  .form {
+    @apply w-full;
+
+    .label {
+      @apply !text-light-100 !font-normal;
+    }
+
+    .input {
+      @apply !bg-dark-200/70 !rounded-full !min-h-12 !px-5 border border-white/10;
+
+      &::placeholder {
+        @apply !text-light-100/70;
+      }
+
+      &:focus-visible {
+        @apply !ring-2 !ring-primary-200/40;
+      }
+    }
+
+    .btn {
+      @apply !w-full !bg-primary-200 !text-dark-100 !rounded-full !min-h-10 !font-bold !px-5 cursor-pointer transition-all;
+
+      &:hover {
+        @apply !bg-primary-200/85 shadow-lg -translate-y-0.5;
+      }
+
+      &:active {
+        @apply translate-y-0;
+      }
+    }
+  }
+
+  .call-view {
+    @apply flex flex-col gap-10 items-center justify-between w-full;
+
+    @media (min-width: 640px) {
+      @apply flex-row;
+    }
+
+    h3 {
+      @apply text-center text-primary-100 mt-5;
+    }
+
+    .card-interviewer {
+      @apply flex-center flex-col gap-2 p-7 h-[400px] blue-gradient-dark rounded-2xl border border-white/10 flex-1 w-full shadow-xl;
+
+      @media (min-width: 640px) {
+        @apply basis-1/2;
+      }
+    }
+
+    .avatar {
+      @apply z-10 flex items-center justify-center blue-gradient rounded-full size-[120px] relative shadow-lg ring-1 ring-white/10;
+
+      .animate-speak {
+        @apply absolute inline-flex size-5/6 animate-ping rounded-full bg-primary-200 opacity-75;
+      }
+    }
+
+    .card-border {
+      @apply border-gradient p-0.5 rounded-2xl flex-1 w-full h-[400px] shadow-xl;
+
+      @media (min-width: 640px) {
+        @apply basis-1/2;
+      }
+
+      @media (max-width: 767px) {
+        @apply hidden;
+      }
+    }
+
+    .card-content {
+      @apply flex flex-col gap-2 justify-center items-center p-7 dark-gradient rounded-2xl min-h-full;
+    }
+  }
+
+  .transcript-border {
+    @apply border-gradient p-0.5 rounded-2xl w-full;
+
+    .transcript {
+      @apply dark-gradient rounded-2xl min-h-12 px-5 py-3 flex items-center justify-center;
+
+      p {
+        @apply text-lg text-center text-white;
+      }
+    }
+  }
+
+  .section-feedback {
+    @apply flex flex-col gap-8 max-w-5xl mx-auto text-lg leading-7;
+
+    @media (max-width: 639px) {
+      @apply px-4;
+    }
+
+    .buttons {
+      @apply flex w-full justify-evenly gap-4;
+
+      @media (max-width: 639px) {
+        @apply flex-col items-center;
+      }
+    }
+  }
+
+  .auth-layout {
+    @apply flex items-center justify-center mx-auto max-w-7xl min-h-screen;
+
+    @media (max-width: 639px) {
+      @apply px-4 py-10;
+    }
+  }
+
+  .root-layout {
+    @apply flex mx-auto max-w-7xl flex-col gap-12 my-12 px-16;
+
+    @media (max-width: 1023px) {
+      @apply px-6;
+    }
+
+    @media (max-width: 639px) {
+      @apply px-4 my-8;
+    }
+  }
+
+  .card-cta {
+    @apply flex flex-row blue-gradient-dark rounded-3xl px-16 py-8 items-center justify-between border border-white/10 shadow-2xl;
+
+    @media (max-width: 639px) {
+      @apply px-4;
+    }
+  }
+
+  .interviews-section {
+    @apply flex flex-wrap gap-4 w-full items-stretch;
+
+    @media (max-width: 1023px) {
+      @apply flex-col;
+    }
+  }
+
+  /* VoxIntel Premium Styles */
+  .glass-card {
+    @apply bg-[#15171e]/60 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden;
+  }
+
+  .glass-card::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none;
+  }
+
+  .badge-status {
+    @apply flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium w-fit;
+  }
+
+  .btn-glossy {
+    @apply relative overflow-hidden px-6 py-2.5 rounded-2xl font-bold transition-all duration-300 shadow-[0_0_20px_rgba(45, 212, 191, 0.2)];
+    background: linear-gradient(135deg, #2dd4bf 0%, #0d9488 100%);
+    color: #042f2e;
+
+    &:hover {
+      @apply scale-[1.02];
+    }
+
+    &:active {
+      @apply scale-[0.98];
+    }
+  }
+
+  .btn-glossy::after {
+    content: '';
+    @apply absolute top-0 -left-[100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] transition-all duration-700;
+  }
+
+  .btn-glossy:hover::after {
+    left: 100%;
+  }
+
+  .roadmap-item {
+    @apply flex items-center gap-4 bg-white/5 p-4 rounded-2xl transition-all border border-white/[0.05];
+
+    &:hover {
+      @apply bg-white/10;
+    }
+  }
+
+  .interview-text {
+    @apply text-lg text-center text-white;
+  }
+
+  .progress {
+    @apply h-1.5 text-[5px] font-bold bg-primary-200 rounded-full flex-center;
+  }
+
+  .tech-tooltip {
+    @apply absolute bottom-full mb-1 hidden px-2 py-1 text-xs text-white bg-gray-700 rounded-md shadow-md;
+  }
+
+  .group:hover .tech-tooltip {
+    @apply flex;
+  }
+
+  /* Premium Feedback UI Utilities (VoxIntel) */
+  .vox-glass {
+    @apply bg-white/[0.03] backdrop-blur-3xl border border-white/[0.08] rounded-[32px] shadow-[0_8px_32px_0_rgba(0, 0, 0, 0.37)];
+    position: relative;
+    overflow: hidden;
+  }
+
+  .vox-glass::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.05),
+        transparent);
+    transition: 0.5s;
+    pointer-events: none;
+  }
+
+  .vox-glass:hover::before {
+    left: 100%;
+  }
+
+  .tech-glow-teal {
+    @apply shadow-[0_0_20px_rgba(45, 212, 191, 0.2)];
+  }
+
+  .tech-glow-purple {
+    @apply shadow-[0_0_20px_rgba(168, 85, 247, 0.2)];
+  }
+
+  .animate-slow-pulse {
+    animation: slow-pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes slow-pulse {
+
+    0%,
+    100% {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 1;
+      transform: scale(1.02);
+    }
+  }
+
+  .roadmap-item-premium {
+    @apply flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] transition-all duration-300;
+
+    &:hover {
+      @apply bg-white/[0.05] border-white/10;
+    }
+  }
+
+  .btn-premium {
+    @apply relative overflow-hidden bg-primary-200 text-slate-950 font-bold py-4 rounded-2xl transition-all duration-300 shadow-[0_0_20px_rgba(202, 197, 254, 0.4)];
+
+    &:hover {
+      @apply scale-[1.02];
+    }
+
+    &:active {
+      @apply scale-[0.98];
+    }
+  }
+
+  .btn-premium::after {
+    content: '';
+    @apply absolute inset-0 bg-white/20 translate-x-[-100%] transition-transform duration-500 skew-x-[-20deg];
+  }
+
+  .btn-premium:hover::after {
+    @apply translate-x-[100%];
+  }
+
+  .card-interview {
+    @apply dark-gradient rounded-2xl min-h-full flex flex-col p-6 relative overflow-hidden gap-10 justify-between ring-1 ring-white/10;
+
+    .badge-text {
+      @apply text-sm font-semibold capitalize;
+    }
+  }
+}
+
+@utility dark-gradient {
+  background-color: #08090d;
+  background-image:
+    radial-gradient(900px circle at 15% 10%, rgba(202, 197, 254, 0.14), transparent 45%),
+    radial-gradient(700px circle at 90% 0%, rgba(73, 222, 80, 0.10), transparent 40%),
+    linear-gradient(to bottom, #1a1c24 0%, #08090d 70%);
+}
+
+@utility border-gradient {
+  background-image: linear-gradient(135deg,
+      rgba(202, 197, 254, 0.45),
+      rgba(255, 255, 255, 0.12),
+      rgba(73, 222, 80, 0.18));
+}
+
+@utility pattern {
+  background-image:
+    radial-gradient(1100px circle at 10% 15%, rgba(202, 197, 254, 0.16), transparent 45%),
+    radial-gradient(900px circle at 95% 5%, rgba(73, 222, 80, 0.10), transparent 45%),
+    radial-gradient(700px circle at 50% 85%, rgba(202, 197, 254, 0.08), transparent 40%),
+    url("/pattern.png");
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat;
+  background-position: 0% 0%, 100% 0%, 50% 100%, top;
+  background-size: auto, auto, auto, 900px;
+}
+
+@utility blue-gradient-dark {
+  background-color: #08090d;
+  background-image:
+    radial-gradient(800px circle at 20% 0%, rgba(202, 197, 254, 0.18), transparent 50%),
+    linear-gradient(to bottom, rgba(23, 21, 50, 0.95) 0%, #08090d 70%);
+}
+
+@utility blue-gradient {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(202, 197, 254, 0.92));
+}
+
+@utility flex-center {
+  @apply flex items-center justify-center;
+}
+
+@utility animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

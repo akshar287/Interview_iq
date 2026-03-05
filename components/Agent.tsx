@@ -61,8 +61,9 @@ const Agent = ({
       setCallStatus(CallStatus.ACTIVE);
     };
 
-    const onCallEnd = () => {
-      console.log("Call ended.");
+    const onCallEnd = (data: any) => {
+      console.log("Call ended. Data:", data);
+      console.log("Disconnect Reason:", data?.reason || "No reason provided");
       setCallStatus(CallStatus.FINISHED);
     };
 
@@ -84,13 +85,18 @@ const Agent = ({
     };
 
     const onError = (error: any) => {
-      console.error("VAPI FULL ERROR:", error);
+      console.error("VAPI ERROR DETAILS:", {
+        message: error?.message,
+        error: error,
+        stack: error?.stack,
+        stringified: JSON.stringify(error, Object.getOwnPropertyNames(error))
+      });
       toast.error(error?.message || "An error occurred with the voice assistant.");
       setCallStatus(CallStatus.INACTIVE);
     };
 
     vapi.on("call-start", onCallStart);
-    vapi.on("call-end", onCallEnd);
+    vapi.on("call-end", onCallEnd as any);
     vapi.on("message", onMessage);
     vapi.on("speech-start", onSpeechStart);
     vapi.on("speech-end", onSpeechEnd);
@@ -201,17 +207,15 @@ const Agent = ({
         interviewId: interviewId,
       };
 
+      const vapiAssistantId = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
+      if (!vapiAssistantId) {
+        toast.error("Vapi Assistant ID is missing in .env!");
+        setCallStatus(CallStatus.INACTIVE);
+        return;
+      }
+
       if (type === "generate") {
-        // Use process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID as the primary ID for the Assistant
-        const vapiAssistantId = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
-        console.log("VAPI START (ASSISTANT):", { vapiAssistantId, userName, userId, interviewId });
-
-        if (!vapiAssistantId) {
-          toast.error("Vapi Assistant ID is missing in .env!");
-          setCallStatus(CallStatus.INACTIVE);
-          return;
-        }
-
+        console.log("VAPI START (GENERATE):", { vapiAssistantId, userName, userId, interviewId });
         await vapi.start(vapiAssistantId, {
           variableValues: {
             username: userName,
@@ -229,8 +233,13 @@ const Agent = ({
             .join("\n");
         }
 
-        console.log("VAPI START (MOCK):", { interviewer, interviewId, userId });
-        await vapi.start(interviewer, {
+        console.log("VAPI START (INTERVIEW OVERRIDE):", { vapiAssistantId, interviewId, userId, interviewerModel: interviewer.model });
+
+        // Use the fixed ID but only override the model settings to keep it stable
+        await vapi.start(vapiAssistantId, {
+          assistantOverrides: {
+            model: interviewer.model,
+          },
           variableValues: {
             questions: formattedQuestions,
           },
