@@ -51,7 +51,7 @@ function safeParseQuestions(text: string): string[] {
 async function generateQuestions(role: string, level: string) {
   try {
     const { text } = await generateText({
-      model: google("gemini-2.0-flash"),
+      model: google("gemini-flash-latest"),
 
       prompt: `
 Create exactly 5 interview questions.
