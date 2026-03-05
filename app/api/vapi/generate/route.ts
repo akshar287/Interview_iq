@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       console.log("DIRECT GENERATE - generating questions for:", { interviewId, roleName, level });
 
       const { text: questions } = await generateText({
-        model: google("gemini-1.5-flash-002"),
+        model: google("gemini-1.5-flash"),
         prompt: `Prepare exactly 5 interview questions for a ${level} level ${roleName} role.
           Focus: technical and behavioral questions.
           Return ONLY a JSON array of strings. No markdown formatting.
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
 
     console.log("GENERATING QUESTIONS WITH AI...");
     const { text: questions } = await generateText({
-      model: google("gemini-1.5-flash-002"),
+      model: google("gemini-1.5-flash"),
       prompt: `Prepare exactly ${amount} interview questions for a ${level} level ${role} role.
         The tech stack is: ${techstackStr}.
         Focus: ${type} questions.
