@@ -12,7 +12,6 @@ import AmbientSound from "@/components/AmbientSound";
 
 const Layout = async ({ children }: { children: ReactNode }) => {
   const isUserAuthenticated = await isAuthenticated();
-  if (!isUserAuthenticated) redirect("/sign-in");
 
   return (
     <div className="root-layout">
@@ -24,12 +23,14 @@ const Layout = async ({ children }: { children: ReactNode }) => {
           <h2 className="text-2xl font-bold tracking-tight text-white">VoxIntel</h2>
         </Link>
 
-        <form action={signOut}>
-          <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/5 gap-2 rounded-xl transition-all">
-            <LogOut size={18} />
-            <span className="font-medium">Sign Out</span>
-          </Button>
-        </form>
+        {isUserAuthenticated && (
+          <form action={signOut}>
+            <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/5 gap-2 rounded-xl transition-all">
+              <LogOut size={18} />
+              <span className="font-medium">Sign Out</span>
+            </Button>
+          </form>
+        )}
       </nav>
 
       {children}
