@@ -16,8 +16,10 @@ interface Feedback {
 interface Interview {
   id: string;
   role: string;
-  level: string;
-  questions: string[];
+  level?: string;
+  position?: string;
+  experience?: string;
+  questions?: string[];
   techstack: string[];
   createdAt: string;
   userId: string;
@@ -40,6 +42,11 @@ interface User {
   name: string;
   email: string;
   id: string;
+  type?: "user" | "company";
+  isIntern?: boolean;
+  companyId?: string;
+  role?: string;
+  experience?: string;
 }
 
 interface InterviewCardProps {

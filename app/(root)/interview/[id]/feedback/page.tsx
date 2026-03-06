@@ -18,6 +18,7 @@ import {
   Database
 } from "lucide-react";
 
+import { db } from "@/firebase/admin";
 import {
   getFeedbackByInterviewId,
   getInterviewById,
@@ -34,9 +35,20 @@ const Feedback = async ({ params }: RouteParams) => {
   const interview = await getInterviewById(id);
   if (!interview) redirect("/");
 
+  const isCompany = user?.type === "company";
+  const dashboardLink = isCompany ? "/company" : "/";
+
+  // Security check for companies
+  if (isCompany) {
+    const internDoc = await db.collection("users").doc(interview.userId).get();
+    if (internDoc.exists && internDoc.data()?.companyId !== user?.id) {
+      redirect("/company");
+    }
+  }
+
   const feedback = await getFeedbackByInterviewId({
     interviewId: id,
-    userId: user?.id!,
+    userId: isCompany ? undefined : user?.id!,
   });
 
   if (!feedback) {
@@ -45,7 +57,7 @@ const Feedback = async ({ params }: RouteParams) => {
         <h1 className="text-4xl font-bold text-white">Feedback Pending</h1>
         <p className="text-white/60 max-w-md">We are still processing your interview analysis. Please check back in a few moments.</p>
         <Button className="btn-secondary" asChild>
-          <Link href="/">Back to Dashboard</Link>
+          <Link href={dashboardLink}>Back to Dashboard</Link>
         </Button>
       </section>
     );
@@ -84,9 +96,9 @@ const Feedback = async ({ params }: RouteParams) => {
           <span className="text-2xl font-black text-white tracking-tighter uppercase italic">VoxIntel</span>
         </div>
         <Button variant="ghost" className="text-white/60 hover:text-white flex items-center gap-2" asChild>
-          <Link href="/">
+          <Link href={dashboardLink}>
             <ArrowRight className="rotate-180 size-4" />
-            Sign Out
+            Dashboard
           </Link>
         </Button>
       </header>
@@ -191,8 +203,8 @@ const Feedback = async ({ params }: RouteParams) => {
                   </Link>
                 </Button>
                 <Button variant="outline" className="h-14 border-white/10 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 transition-all uppercase tracking-widest text-xs" asChild>
-                  <Link href="/">
-                    Unlock Targeted Training Module
+                  <Link href={dashboardLink}>
+                    Return to Dashboard
                   </Link>
                 </Button>
               </div>

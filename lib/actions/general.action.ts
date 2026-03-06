@@ -88,6 +88,18 @@ export async function createFeedback(params: CreateFeedbackParams): Promise<Crea
       finalized: true,
     });
 
+    // Sync with Intern Profile if applicable
+    const userDoc = await db.collection("users").doc(userId).get();
+    if (userDoc.exists && userDoc.data()?.isIntern) {
+      console.log("Syncing feedback with intern profile for user:", userId);
+      await db.collection("users").doc(userId).update({
+        lastInterviewId: interviewId,
+        lastFeedbackId: feedbackRef.id,
+        lastInterviewScore: object.totalScore,
+        interviewStatus: "Completed",
+      });
+    }
+
     return { success: true, feedbackId: feedbackRef.id };
   } catch (error: any) {
     console.error("CRITICAL ERROR SAVING FEEDBACK:", error?.message || error);
@@ -104,18 +116,19 @@ export async function getInterviewById(id: string): Promise<Interview | null> {
 }
 
 export async function getFeedbackByInterviewId(
-  params: GetFeedbackByInterviewIdParams
+  params: { interviewId: string; userId?: string }
 ): Promise<Feedback | null> {
   const { interviewId, userId } = params;
 
-  if (!userId || !interviewId) return null;
+  if (!interviewId) return null;
 
-  const querySnapshot = await db
-    .collection("feedback")
-    .where("interviewId", "==", interviewId)
-    .where("userId", "==", userId)
-    .limit(1)
-    .get();
+  let query = db.collection("feedback").where("interviewId", "==", interviewId);
+
+  if (userId) {
+    query = query.where("userId", "==", userId);
+  }
+
+  const querySnapshot = await query.limit(1).get();
 
   if (querySnapshot.empty) return null;
 
@@ -188,6 +201,7 @@ export async function getInterviewsByUserId(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 }
+
 export async function getFeedbackByUserId(
   userId: string
 ): Promise<Feedback[] | null> {
@@ -202,4 +216,22 @@ export async function getFeedbackByUserId(
     id: doc.id,
     ...doc.data(),
   })) as Feedback[];
+}
+
+export async function getCompanyInterviewsByRole(
+  companyId: string,
+  role: string
+): Promise<Interview[]> {
+  if (!companyId || !role) return [];
+
+  const snapshot = await db
+    .collection("interviews")
+    .where("userId", "==", companyId)
+    .where("role", "==", role)
+    .get();
+
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Interview[];
 }

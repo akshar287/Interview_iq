@@ -3,6 +3,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
+import { db } from "@/firebase/admin";
 import InterviewCard from "@/components/InterviewCard";
 import NewInterviewButton from "@/components/NewInterviewButton";
 
@@ -14,6 +15,7 @@ import {
   getLatestInterviews,
   getFeedbackByUserId,
   getLatestUserInterview,
+  getCompanyInterviewsByRole,
 } from "@/lib/actions/general.action";
 
 async function Home() {
@@ -47,7 +49,31 @@ async function Home() {
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
-  const hasPastInterviews = userInterviews.length > 0;
+  // Auto-generate assigned interview for interns if missing
+  if (user.isIntern && userInterviews.length === 0) {
+    const newInterview = {
+      userId: user.id,
+      role: user.role || "Software Engineer",
+      position: user.role || "Software Engineer",
+      experience: user.experience || "Entry",
+      techstack: [],
+      type: "Technical",
+      finalized: false,
+      createdAt: new Date().toISOString(),
+    };
+    const docRef = await db.collection("interviews").add(newInterview);
+    userInterviews.push({ id: docRef.id, ...newInterview } as Interview);
+  }
+
+  const internAssignedInterview = user.isIntern
+    ? userInterviews.find(i => !i.finalized)
+    : null;
+
+  const userPastInterviews = user.isIntern
+    ? userInterviews.filter(i => i.finalized)
+    : userInterviews;
+
+  const hasPastInterviews = userPastInterviews.length > 0;
   const hasUpcomingInterviews = allInterview?.length! > 0;
 
   return (
@@ -63,7 +89,9 @@ async function Home() {
             data-driven feedback to accelerate your career growth.
           </p>
 
-          <NewInterviewButton userId={user?.id!} userName={user?.name!} />
+          {!user.isIntern && (
+            <NewInterviewButton userId={user?.id!} userName={user?.name!} />
+          )}
         </div>
 
         <div className="relative mt-8 md:mt-0">
@@ -79,11 +107,11 @@ async function Home() {
       </section>
 
       <section className="flex flex-col gap-6 mt-8">
-        <h2>Your Interviews</h2>
+        <h2>{user.isIntern ? "Your History" : "Your Interviews"}</h2>
 
         <div className="interviews-section">
           {hasPastInterviews ? (
-            userInterviews?.map((interview) => (
+            userPastInterviews?.map((interview) => (
               <InterviewCard
                 key={interview.id}
                 userId={user?.id}
@@ -101,10 +129,29 @@ async function Home() {
       </section>
 
       <section className="flex flex-col gap-6 mt-8">
-        <h2>Take Interviews</h2>
+        <h2>{user?.isIntern ? "Your Assigned Interview" : "Take Interviews"}</h2>
 
         <div className="interviews-section">
-          {hasUpcomingInterviews ? (
+          {user?.isIntern ? (
+            internAssignedInterview ? (
+              <InterviewCard
+                key={internAssignedInterview.id}
+                userId={user?.id}
+                interviewId={internAssignedInterview.id}
+                role={internAssignedInterview.role}
+                type={internAssignedInterview.type}
+                techstack={internAssignedInterview.techstack}
+                createdAt={internAssignedInterview.createdAt}
+              />
+            ) : hasPastInterviews ? (
+              <div className="flex flex-col items-center justify-center py-10 glass-card w-full border-teal-500/30">
+                <p className="text-xl font-bold text-teal-400 mb-2">Interview Completed!</p>
+                <p className="text-white/60">Your company has received your feedback. Great job!</p>
+              </div>
+            ) : (
+              <p>No interview assigned for your role yet.</p>
+            )
+          ) : hasUpcomingInterviews ? (
             allInterview?.map((interview) => (
               <InterviewCard
                 key={interview.id}

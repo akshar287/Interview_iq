@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { z } from "zod";
 import Link from "next/link";
 import Image from "next/image";
@@ -17,7 +18,12 @@ import {
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 
-import { signIn, signUp } from "@/lib/actions/auth.action";
+import {
+  signIn,
+  signUp,
+  companySignIn,
+  companySignUp,
+} from "@/lib/actions/auth.action";
 import FormField from "./FormField";
 
 const authFormSchema = (type: "sign-in" | "sign-up") => {
@@ -29,6 +35,7 @@ const authFormSchema = (type: "sign-in" | "sign-up") => {
 };
 
 const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
+  const [accountType, setAccountType] = useState<"user" | "company">("user");
   const router = useRouter();
   const formSchema = authFormSchema(type);
 
@@ -52,19 +59,29 @@ const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
           password
         );
 
-        const result = await signUp({
-          uid: userCredential.user.uid,
-          name: name!,
-          email,
-        });
+        const result =
+          accountType === "user"
+            ? await signUp({
+              uid: userCredential.user.uid,
+              name: name!,
+              email,
+            })
+            : await companySignUp({
+              uid: userCredential.user.uid,
+              name: name!,
+              email,
+            });
 
         if (!result?.success) {
           toast.error(result?.message);
           return;
         }
 
-        toast.success("Account created successfully. Please sign in.");
-        window.location.href = "/sign-in";
+        toast.success(
+          `${accountType === "user" ? "Account" : "Company account"
+          } created successfully. Please sign in.`
+        );
+        router.push("/sign-in");
       } else {
         const { email, password } = data;
 
@@ -81,16 +98,22 @@ const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
           return;
         }
 
-        const result = await signIn({
-          email,
-          idToken,
-        });
+        const result =
+          accountType === "user"
+            ? await signIn({
+              email,
+              idToken,
+            })
+            : await companySignIn({
+              email,
+              idToken,
+            });
 
         if (result && !result.success) {
           toast.error(result.message);
         } else {
           toast.success("Signed in successfully.");
-          router.push("/");
+          router.push(accountType === "company" ? "/company" : "/");
         }
       }
     } catch (error: any) {
@@ -140,6 +163,29 @@ const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
 
         <h3>Practice job interviews with AI</h3>
 
+        <div className="flex flex-row gap-4 mt-4 p-1 bg-gray-100 dark:bg-zinc-900 rounded-lg">
+          <button
+            type="button"
+            onClick={() => setAccountType("user")}
+            className={`flex-1 py-2 px-4 rounded-md transition-all ${accountType === "user"
+              ? "bg-white dark:bg-zinc-800 shadow-sm font-semibold"
+              : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+              }`}
+          >
+            User Login
+          </button>
+          <button
+            type="button"
+            onClick={() => setAccountType("company")}
+            className={`flex-1 py-2 px-4 rounded-md transition-all ${accountType === "company"
+              ? "bg-white dark:bg-zinc-800 shadow-sm font-semibold"
+              : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+              }`}
+          >
+            Company Login
+          </button>
+        </div>
+
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -149,8 +195,10 @@ const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
               <FormField
                 control={form.control}
                 name="name"
-                label="Name"
-                placeholder="Your Name"
+                label={accountType === "user" ? "Name" : "Company Name"}
+                placeholder={
+                  accountType === "user" ? "Your Name" : "Company Name"
+                }
                 type="text"
               />
             )}
