@@ -92,18 +92,55 @@ export async function createFeedback(params: CreateFeedbackParams): Promise<Crea
     const userDoc = await db.collection("users").doc(userId).get();
     if (userDoc.exists && userDoc.data()?.isIntern) {
       console.log("Syncing feedback with intern profile for user:", userId);
-      await db.collection("users").doc(userId).update({
+      const interviewDoc = await db.collection("interviews").doc(interviewId).get();
+      const interviewData = interviewDoc.data();
+      const updatePayload: Record<string, unknown> = {
         lastInterviewId: interviewId,
         lastFeedbackId: feedbackRef.id,
         lastInterviewScore: object.totalScore,
         interviewStatus: "Completed",
-      });
+      };
+      if (interviewData?.recordingUrl) {
+        updatePayload.lastRecordingUrl = interviewData.recordingUrl;
+        updatePayload.url = interviewData.recordingUrl;
+      }
+      await db.collection("users").doc(userId).update(updatePayload);
     }
 
     return { success: true, feedbackId: feedbackRef.id };
   } catch (error: any) {
     console.error("CRITICAL ERROR SAVING FEEDBACK:", error?.message || error);
     return { success: false, error: error?.message || "Internal server error" };
+  }
+}
+
+export async function saveInterviewRecording(
+  interviewId: string,
+  recordingUrl: string,
+  userId?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!interviewId || !recordingUrl) {
+      return { success: false, error: "Missing interviewId or recordingUrl" };
+    }
+    await db.collection("interviews").doc(interviewId).update({
+      recordingUrl,
+      url: recordingUrl,
+      updatedAt: new Date().toISOString(),
+    });
+    if (userId) {
+      const userDoc = await db.collection("users").doc(userId).get();
+      if (userDoc.exists && userDoc.data()?.isIntern) {
+        await db.collection("users").doc(userId).update({
+          lastRecordingUrl: recordingUrl,
+          url: recordingUrl,
+        });
+      }
+    }
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error saving interview recording:", error);
+    return { success: false, error: error?.message };
   }
 }
 

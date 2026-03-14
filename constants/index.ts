@@ -97,6 +97,14 @@ export const mappings = {
   "aws amplify": "amplify",
 };
 
+export const MOCK_INTERVIEW_QUESTIONS = [
+  "Tell me about yourself.",
+  "What is the most challenging project you worked on?",
+  "How do you debug complex issues?",
+  "How do you learn new technologies?",
+  "Where do you see yourself in 3 years?",
+];
+
 export const interviewer: CreateAssistantDTO = {
   name: "Interviewer",
   firstMessage:
@@ -117,7 +125,7 @@ export const interviewer: CreateAssistantDTO = {
   },
   model: {
     provider: "google",
-    model: "gemini-flash-latest",
+    model: "gemini-1.5-flash",
     messages: [
       {
         role: "system",

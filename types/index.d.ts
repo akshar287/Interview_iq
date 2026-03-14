@@ -25,6 +25,7 @@ interface Interview {
   userId: string;
   type: string;
   finalized: boolean;
+  recordingUrl?: string;
 }
 
 interface CreateFeedbackParams {
@@ -42,11 +43,12 @@ interface User {
   name: string;
   email: string;
   id: string;
-  type?: "user" | "company";
+  type?: "user" | "college";
   isIntern?: boolean;
   companyId?: string;
   role?: string;
   experience?: string;
+  lastRecordingUrl?: string;
 }
 
 interface InterviewCardProps {

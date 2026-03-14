@@ -3,6 +3,7 @@ import { google } from "@ai-sdk/google";
 
 import { db } from "@/firebase/admin";
 import { getRandomInterviewCover } from "@/lib/utils";
+import { saveInterviewRecording } from "@/lib/actions/general.action";
 
 /* ------------------------------
    CHECK API KEY
@@ -206,10 +207,56 @@ export async function POST(request: Request) {
   try {
     const interviewRef = db.collection("interviews").doc(interviewId);
     const doc = await interviewRef.get();
+    const alreadyFinalized = doc.exists && doc.data()?.finalized;
 
-    if (doc.exists && doc.data()?.finalized) {
-      console.log("⚠️ Interview already finalized");
+    // Always try to save recording (even if interview already finalized, e.g. feedback created first)
+    // First from webhook payload, then fetch from VAPI API if we have call id
+    let recordingUrl: string | null = null;
+    const rawRecording =
+      message.call?.artifact?.recording ??
+      message.artifact?.recording ??
+      body.recordingUrl;
+    if (rawRecording) {
+      recordingUrl =
+        typeof rawRecording === "string"
+          ? rawRecording
+          : rawRecording?.url ?? rawRecording?.mono ?? rawRecording?.stereo ?? null;
+    }
+    if (!recordingUrl) {
+      const callId =
+        message.call?.id ??
+        message.callId ??
+        body.call?.id ??
+        body.callId;
+      const vapiKey = process.env.VAPI_API_KEY ?? process.env.NEXT_PUBLIC_VAPI_WEB_TOKEN;
+      if (callId && vapiKey) {
+        try {
+          const res = await fetch(`https://api.vapi.ai/call/${callId}`, {
+            headers: { Authorization: `Bearer ${vapiKey}` },
+          });
+          if (res.ok) {
+            const callData = await res.json();
+            const art = callData.artifact ?? callData.call?.artifact;
+            const rec = art?.recording;
+            recordingUrl =
+              typeof rec === "string"
+                ? rec
+                : rec?.url ?? rec?.mono ?? rec?.stereo ?? null;
+          }
+        } catch (err) {
+          console.warn("Failed to fetch recording from VAPI API:", err);
+        }
+      }
+    }
+    if (recordingUrl && typeof recordingUrl === "string") {
+      await saveInterviewRecording(interviewId, recordingUrl, userId !== "anonymous" ? userId : undefined);
+      console.log("✅ Interview recording saved:", interviewId);
+    } else {
+      console.log("⚠️ No recording URL for interview", interviewId, "(enable recording in VAPI assistant & ensure server URL receives end-of-call-report)");
+    }
 
+    if (alreadyFinalized) {
+      console.log("⚠️ Interview already finalized, skipping question update");
       return Response.json({ success: true });
     }
 

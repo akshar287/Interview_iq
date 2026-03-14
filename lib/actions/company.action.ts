@@ -2,6 +2,7 @@
 
 import { auth as adminAuth, db } from "@/firebase/admin";
 import { revalidatePath } from "next/cache";
+import { MOCK_INTERVIEW_QUESTIONS } from "@/constants";
 
 export async function addIntern({
     companyId,
@@ -85,6 +86,26 @@ export async function addIntern({
     }
 }
 
+export async function createMockInterview(companyId: string, companyName: string) {
+    try {
+        const docRef = await db.collection("interviews").add({
+            userId: companyId,
+            role: "Software Engineer",
+            type: "Mock",
+            techstack: ["JavaScript", "TypeScript", "React"],
+            questions: MOCK_INTERVIEW_QUESTIONS,
+            finalized: false,
+            createdAt: new Date().toISOString(),
+        });
+        revalidatePath("/company");
+        revalidatePath("/company/mock-interview");
+        return { success: true, interviewId: docRef.id };
+    } catch (error: any) {
+        console.error("Error creating mock interview:", error);
+        return { success: false, interviewId: null, error: error?.message };
+    }
+}
+
 export async function getCompanyInterns(companyId: string) {
     try {
         const snapshot = await db
@@ -93,14 +114,28 @@ export async function getCompanyInterns(companyId: string) {
             .where("isIntern", "==", true)
             .get();
 
-        return snapshot.docs.map((doc) => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                ...data,
-                createdAt: data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : data.createdAt,
-            };
-        });
+        const interns = await Promise.all(
+            snapshot.docs.map(async (doc) => {
+                const data = doc.data();
+                const base: Record<string, unknown> = {
+                    id: doc.id,
+                    ...data,
+                    createdAt: data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : data.createdAt,
+                };
+                // If user has no url/lastRecordingUrl but has lastInterviewId, get recording from interview
+                if ((!base.url && !base.lastRecordingUrl) && base.lastInterviewId) {
+                    const interviewDoc = await db.collection("interviews").doc(String(base.lastInterviewId)).get();
+                    const interviewData = interviewDoc.data();
+                    const recordingUrl = interviewData?.url ?? interviewData?.recordingUrl;
+                    if (recordingUrl) {
+                        base.url = recordingUrl;
+                        base.lastRecordingUrl = recordingUrl;
+                    }
+                }
+                return base;
+            })
+        );
+        return interns;
     } catch (error) {
         console.error("Error fetching interns:", error);
         return [];

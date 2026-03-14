@@ -15,7 +15,8 @@ import {
   Cpu,
   Layout,
   Globe,
-  Database
+  Database,
+  Headphones
 } from "lucide-react";
 
 import { db } from "@/firebase/admin";
@@ -38,11 +39,15 @@ const Feedback = async ({ params }: RouteParams) => {
   const isCompany = user?.type === "company";
   const dashboardLink = isCompany ? "/company" : "/";
 
-  // Security check for companies
+  // Security check for companies: allow if viewing own mock interview or intern's interview
   if (isCompany) {
-    const internDoc = await db.collection("users").doc(interview.userId).get();
-    if (internDoc.exists && internDoc.data()?.companyId !== user?.id) {
-      redirect("/company");
+    if (interview.userId === user?.id) {
+      // Company viewing their own mock interview
+    } else {
+      const internDoc = await db.collection("users").doc(interview.userId).get();
+      if (internDoc.exists && internDoc.data()?.companyId !== user?.id) {
+        redirect("/company");
+      }
     }
   }
 
@@ -95,12 +100,25 @@ const Feedback = async ({ params }: RouteParams) => {
           </div>
           <span className="text-2xl font-black text-white tracking-tighter uppercase italic">VoxIntel</span>
         </div>
-        <Button variant="ghost" className="text-white/60 hover:text-white flex items-center gap-2" asChild>
-          <Link href={dashboardLink}>
-            <ArrowRight className="rotate-180 size-4" />
-            Dashboard
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          {interview.recordingUrl && (
+            <a
+              href={interview.recordingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-primary-200 hover:bg-white/10 transition-colors"
+            >
+              <Headphones className="size-4" />
+              Listen to Recording
+            </a>
+          )}
+          <Button variant="ghost" className="text-white/60 hover:text-white flex items-center gap-2" asChild>
+            <Link href={dashboardLink}>
+              <ArrowRight className="rotate-180 size-4" />
+              Dashboard
+            </Link>
+          </Button>
+        </div>
       </header>
 
       <div className="relative z-10 mx-auto max-w-7xl">

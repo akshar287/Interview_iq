@@ -1,12 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { db } from "@/firebase/admin";
 import InterviewCard from "@/components/InterviewCard";
 import NewInterviewButton from "@/components/NewInterviewButton";
 import {
-  ArrowRight,
   CheckCircle2,
   Cpu,
   BarChart3,
@@ -51,18 +49,6 @@ async function Home() {
               Talent IQ uses advanced AI to simulate realistic interview scenarios,
               providing instant feedback and actionable insights to help you land your dream job.
             </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 animate-in fade-in slide-in-from-bottom-8 delay-300 duration-1000">
-              <Button size="lg" className="h-14 px-10 text-lg font-bold rounded-2xl group transition-all hover:scale-105" asChild>
-                <Link href="/sign-in">
-                  Get Started
-                  <ArrowRight className="ml-2 size-5 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="h-14 px-10 text-lg font-bold rounded-2xl border-white/10 hover:bg-white/5" asChild>
-                <Link href="#features">Learn More</Link>
-              </Button>
-            </div>
           </div>
         </section>
 
@@ -92,9 +78,9 @@ async function Home() {
             <div className="size-12 rounded-2xl bg-purple-400/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <Users className="text-purple-400 size-6" />
             </div>
-            <h3 className="text-xl font-bold mb-3">Company Portal</h3>
+            <h3 className="text-xl font-bold mb-3">College Portal</h3>
             <p className="text-white/50 leading-relaxed">
-              Streamline your hiring process. Assign interviews to interns and track their performance effortlessly.
+              Streamline placement preparation. Register your college and track student interview performance effortlessly.
             </p>
           </div>
         </section>
@@ -104,7 +90,7 @@ async function Home() {
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-white/30">Trusted by modern companies</p>
           <div className="flex flex-wrap justify-center gap-x-12 gap-y-6 opacity-30 grayscale contrast-125">
             <span className="text-2xl font-black italic">TECHNO</span>
-            <span className="text-2xl font-black italic">CLOUDLY</span>
+            <span className="text-2xl font-black italic">CLOUDY</span>
             <span className="text-2xl font-black italic">AI.CORE</span>
             <span className="text-2xl font-black italic">NEXUS</span>
           </div>

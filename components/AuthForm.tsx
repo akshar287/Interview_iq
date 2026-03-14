@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { z } from "zod";
 import Link from "next/link";
 import Image from "next/image";
@@ -21,8 +20,8 @@ import { Button } from "@/components/ui/button";
 import {
   signIn,
   signUp,
-  companySignIn,
-  companySignUp,
+  collegeSignIn,
+  collegeSignUp,
 } from "@/lib/actions/auth.action";
 import FormField from "./FormField";
 
@@ -34,8 +33,7 @@ const authFormSchema = (type: "sign-in" | "sign-up") => {
   });
 };
 
-const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
-  const [accountType, setAccountType] = useState<"user" | "company">("user");
+const AuthForm = ({ type, module = "user" }: { type: "sign-in" | "sign-up"; module?: "user" | "college" }) => {
   const router = useRouter();
   const formSchema = authFormSchema(type);
 
@@ -60,13 +58,13 @@ const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
         );
 
         const result =
-          accountType === "user"
+          module === "user"
             ? await signUp({
               uid: userCredential.user.uid,
               name: name!,
               email,
             })
-            : await companySignUp({
+            : await collegeSignUp({
               uid: userCredential.user.uid,
               name: name!,
               email,
@@ -78,10 +76,10 @@ const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
         }
 
         toast.success(
-          `${accountType === "user" ? "Account" : "Company account"
+          `${module === "user" ? "Account" : "College account"
           } created successfully. Please sign in.`
         );
-        router.push("/sign-in");
+        router.push(module === "college" ? "/college/sign-in" : "/sign-in");
       } else {
         const { email, password } = data;
 
@@ -99,12 +97,12 @@ const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
         }
 
         const result =
-          accountType === "user"
+          module === "user"
             ? await signIn({
               email,
               idToken,
             })
-            : await companySignIn({
+            : await collegeSignIn({
               email,
               idToken,
             });
@@ -113,7 +111,7 @@ const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
           toast.error(result.message);
         } else {
           toast.success("Signed in successfully.");
-          router.push(accountType === "company" ? "/company" : "/");
+          router.push(module === "college" ? "/college/dashboard" : "/");
         }
       }
     } catch (error: any) {
@@ -161,30 +159,7 @@ const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
           <h2 className="text-primary-100">VoxIntel</h2>
         </div>
 
-        <h3>Practice job interviews with AI</h3>
-
-        <div className="flex flex-row gap-4 mt-4 p-1 bg-gray-100 dark:bg-zinc-900 rounded-lg">
-          <button
-            type="button"
-            onClick={() => setAccountType("user")}
-            className={`flex-1 py-2 px-4 rounded-md transition-all ${accountType === "user"
-              ? "bg-white dark:bg-zinc-800 shadow-sm font-semibold"
-              : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-              }`}
-          >
-            User Login
-          </button>
-          <button
-            type="button"
-            onClick={() => setAccountType("company")}
-            className={`flex-1 py-2 px-4 rounded-md transition-all ${accountType === "company"
-              ? "bg-white dark:bg-zinc-800 shadow-sm font-semibold"
-              : "text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-              }`}
-          >
-            Company Login
-          </button>
-        </div>
+        <h3>{module === "college" ? "College Portal" : "Practice job interviews with AI"}</h3>
 
         <Form {...form}>
           <form
@@ -195,9 +170,9 @@ const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
               <FormField
                 control={form.control}
                 name="name"
-                label={accountType === "user" ? "Name" : "Company Name"}
+                label={module === "user" ? "Name" : "College Name"}
                 placeholder={
-                  accountType === "user" ? "Your Name" : "Company Name"
+                  module === "user" ? "Your Name" : "College Name"
                 }
                 type="text"
               />
@@ -228,7 +203,10 @@ const AuthForm = ({ type }: { type: "sign-in" | "sign-up" }) => {
         <p className="text-center">
           {isSignIn ? "No account yet?" : "Have an account already?"}
           <Link
-            href={!isSignIn ? "/sign-in" : "/sign-up"}
+            href={!isSignIn
+              ? (module === "college" ? "/college/sign-in" : "/sign-in")
+              : (module === "college" ? "/college/sign-up" : "/sign-up")
+            }
             className="font-bold text-user-primary ml-1"
           >
             {!isSignIn ? "Sign In" : "Sign Up"}

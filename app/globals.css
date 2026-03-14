@@ -234,14 +234,6 @@
       @apply flex-center flex-col gap-2 p-7 h-[400px] blue-gradient-dark rounded-2xl border border-white/10 flex-1 sm:basis-1/2 w-full shadow-xl;
     }
 
-    .avatar {
-      @apply z-10 flex items-center justify-center blue-gradient rounded-full size-[120px] relative shadow-lg ring-1 ring-white/10;
-
-      .animate-speak {
-        @apply absolute inline-flex size-5/6 animate-ping rounded-full bg-primary-200 opacity-75;
-      }
-    }
-
     .card-border {
       @apply border-gradient p-0.5 rounded-2xl flex-1 sm:basis-1/2 w-full h-[400px] max-md:hidden shadow-xl;
     }

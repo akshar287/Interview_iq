@@ -60,7 +60,7 @@ export async function signUp({
   }
 }
 
-export async function companySignUp({
+export async function collegeSignUp({
   uid,
   name,
   email,
@@ -70,16 +70,16 @@ export async function companySignUp({
   email: string;
 }) {
   try {
-    const companyRecord = await db.collection("company").doc(uid).get();
+    const collegeRecord = await db.collection("college").doc(uid).get();
 
-    if (companyRecord.exists) {
+    if (collegeRecord.exists) {
       return {
         success: false,
-        message: "Company already exists. Please sign in.",
+        message: "College already exists. Please sign in.",
       };
     }
 
-    await db.collection("company").doc(uid).set({
+    await db.collection("college").doc(uid).set({
       name,
       email,
       createdAt: new Date(),
@@ -87,13 +87,13 @@ export async function companySignUp({
 
     return {
       success: true,
-      message: "Company account created successfully. Please sign in.",
+      message: "College account created successfully. Please sign in.",
     };
   } catch (error: any) {
-    console.error("Company sign up error:", error);
+    console.error("College sign up error:", error);
     return {
       success: false,
-      message: `Company sign up error: ${error.message || "Failed to create company account."}`,
+      message: `College sign up error: ${error.message || "Failed to create college account."}`,
     };
   }
 }
@@ -118,11 +118,18 @@ export async function signIn({
     const dbUserRecord = await db.collection("users").doc(userRecord.uid).get();
 
     if (!dbUserRecord.exists) {
-      await db.collection("users").doc(userRecord.uid).set({
-        name: userRecord.displayName || email.split("@")[0],
-        email,
-        createdAt: new Date(),
-      });
+      // Check if this account belongs to a college — if so, reject user login
+      const dbCollegeRecord = await db.collection("college").doc(userRecord.uid).get();
+      if (dbCollegeRecord.exists) {
+        return {
+          success: false,
+          message: "This account is a college account. Please sign in at the College portal.",
+        };
+      }
+      return {
+        success: false,
+        message: "User does not exist.",
+      };
     }
 
     await setSessionCookie(idToken);
@@ -137,7 +144,7 @@ export async function signIn({
   return { success: true };
 }
 
-export async function companySignIn({
+export async function collegeSignIn({
   email,
   idToken,
 }: {
@@ -150,25 +157,25 @@ export async function companySignIn({
     if (!userRecord) {
       return {
         success: false,
-        message: "Company does not exist.",
+        message: "College does not exist.",
       };
     }
 
-    const dbCompanyRecord = await db.collection("company").doc(userRecord.uid).get();
+    const dbCollegeRecord = await db.collection("college").doc(userRecord.uid).get();
 
-    if (!dbCompanyRecord.exists) {
+    if (!dbCollegeRecord.exists) {
       return {
         success: false,
-        message: "Company profile not found.",
+        message: "College profile not found.",
       };
     }
 
     await setSessionCookie(idToken);
   } catch (error: any) {
-    console.error("Company sign in error:", error);
+    console.error("College sign in error:", error);
     return {
       success: false,
-      message: `Company sign in error: ${error.message || "Failed to log in."}`,
+      message: `College sign in error: ${error.message || "Failed to log in."}`,
     };
   }
 
@@ -199,9 +206,9 @@ export async function isAuthenticated() {
 
     if (userRecord.exists) return true;
 
-    const companyRecord = await db.collection("company").doc(decodedToken.uid).get();
+    const collegeRecord = await db.collection("college").doc(decodedToken.uid).get();
 
-    return !!companyRecord.exists;
+    return !!collegeRecord.exists;
   } catch (error) {
     console.error("Auth check error:", error);
     return false;
@@ -223,11 +230,11 @@ export async function getCurrentUser(): Promise<User | null> {
     );
 
     let userRecord = await db.collection("users").doc(decodedToken.uid).get();
-    let type: "user" | "company" = "user";
+    let type: "user" | "college" = "user";
 
     if (!userRecord.exists) {
-      userRecord = await db.collection("company").doc(decodedToken.uid).get();
-      type = "company";
+      userRecord = await db.collection("college").doc(decodedToken.uid).get();
+      type = "college";
     }
 
     if (!userRecord.exists) {
