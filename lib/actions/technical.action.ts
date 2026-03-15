@@ -412,3 +412,116 @@ export async function executeCode({
 
 
 
+
+export async function generateTechnicalProblem(difficulty: 'Easy' | 'Medium' | 'Difficult') {
+  try {
+    const prompt = `
+Generate a unique, creative, and highly specific technical coding problem for a student interview.
+Difficulty Level: ${difficulty}
+Random Seed/Time: ${new Date().toISOString()}
+
+INSTRUCTIONS:
+1. DO NOT generate standard/famous problems (like Two Sum, Reverse String, etc.).
+2. Create a realistic real-world scenario (e.g., related to space exploration, financial tech, medical devices, etc.).
+3. The problem should require logic and algorithmic thinking.
+4. Provide a clear 'solution' field with a well-commented, optimal Python implementation.
+
+Respond with ONLY valid JSON strictly matching this Zod schema:
+{
+  "title": string,
+  "description": string,
+  "exampleInput": string,
+  "exampleOutput": string,
+  "constraints": string,
+  "baseCode": string (Starter function template in Python),
+  "testCases": [{ "input": string, "expectedOutput": string }],
+  "solution": string (Optimal Python solution)
+}
+    `;
+
+    const model = google("gemini-flash-latest" as string, { structuredOutputs: false, useSearchGrounding: false });
+    const { object } = await generateObject({
+      model,
+      schema: z.object({
+        title: z.string(),
+        description: z.string(),
+        exampleInput: z.string(),
+        exampleOutput: z.string(),
+        constraints: z.string(),
+        baseCode: z.string(),
+        testCases: z.array(z.object({
+            input: z.string(),
+            expectedOutput: z.string()
+        })),
+        solution: z.string(),
+      }),
+      prompt,
+    });
+
+    return { success: true, problem: object };
+  } catch (error: any) {
+    console.error("Generate tech problem error:", error);
+    return { success: false, message: error.message };
+  }
+}
+
+export async function evaluateTechnicalSubmission({
+  problem,
+  code,
+  language,
+}: {
+  problem: any;
+  code: string;
+  language: string;
+}) {
+  try {
+    const prompt = `
+You are an expert technical interviewer and code evaluator. 
+Evaluate the following technical coding problem and the student's submitted code.
+
+Problem Title: ${problem.title}
+Problem Description: ${problem.description}
+Constraints: ${problem.constraints}
+
+Student Code (${language}):
+\`\`\`${language}
+${code || "No code submitted."}
+\`\`\`
+
+Respond with ONLY valid JSON strictly matching this Zod schema:
+{
+  "score": number (out of 100),
+  "overallSummary": string,
+  "feedback": string,
+  "timeComplexity": string,
+  "spaceComplexity": string,
+  "isCorrect": boolean,
+  "strengths": string[],
+  "weakAreas": string[],
+  "improvementTips": string[]
+}
+    `;
+
+    const model = google("gemini-flash-latest" as string, { structuredOutputs: false, useSearchGrounding: false });
+    const { object } = await generateObject({
+      model,
+      schema: z.object({
+        score: z.number(),
+        overallSummary: z.string(),
+        feedback: z.string(),
+        timeComplexity: z.string(),
+        spaceComplexity: z.string(),
+        isCorrect: z.boolean(),
+        strengths: z.array(z.string()),
+        weakAreas: z.array(z.string()),
+        improvementTips: z.array(z.string()),
+      }),
+      prompt,
+    });
+
+    return { success: true, evaluation: object };
+  } catch (error: any) {
+    console.error("Evaluate tech submission error:", error);
+    return { success: false, message: error.message };
+  }
+}
