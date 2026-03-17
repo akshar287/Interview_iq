@@ -8,7 +8,7 @@ import {
   TrendingUp, HelpCircle, XCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { generateAptitudeExam, evaluateUserAptitude, type Question } from "@/lib/actions/aptitude.action";
+import { generateAptitudeExam, evaluateUserAptitude, savePracticeAptitudeResult, type Question } from "@/lib/actions/aptitude.action";
 import { toast } from "sonner";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import { deductTokens } from "@/lib/actions/billing.action";
@@ -136,6 +136,22 @@ export default function AptitudeRoundClient() {
         score: res.score,
         percentage: res.percentage
       }));
+
+      // Find current user safely and save result
+      getCurrentUser().then(user => {
+        if (user && user.type === "student") {
+          savePracticeAptitudeResult({
+            studentFirestoreId: user.id,
+            questions,
+            answers,
+            answerTimes,
+            totalTimeUsed,
+            score: res.score || 0,
+            percentage: res.percentage || 0,
+            aiFeedback: JSON.stringify(res.evaluation)
+          }).catch(console.error);
+        }
+      }).catch(console.error);
     } else {
       toast.error("Evaluation failed. Please try again.");
     }

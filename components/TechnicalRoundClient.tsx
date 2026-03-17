@@ -7,7 +7,7 @@ import {
   CheckCircle, ArrowRight, BookOpen, Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { generateTechnicalProblem, evaluateTechnicalSubmission } from "@/lib/actions/technical.action";
+import { generateTechnicalProblem, evaluateTechnicalSubmission, savePracticeTechnicalResult } from "@/lib/actions/technical.action";
 import CodeEditor from "@/components/CodeEditor";
 import { toast } from "sonner";
 import { BarChart3, TrendingUp, Target, CalendarDays, BookOpen as BookOpenIcon, CheckCircle2 as CheckCircle2Icon } from "lucide-react";
@@ -95,6 +95,23 @@ export default function TechnicalRoundClient() {
 
     if (res.success && res.evaluation) {
       setEvaluation(res.evaluation);
+
+      // Save practice technical result
+      const timeLimit = difficulty === "Easy" ? 20 * 60 : difficulty === "Medium" ? 40 * 60 : 60 * 60;
+      const totalTimeUsed = timeLimit - timeLeft;
+
+      getCurrentUser().then(user => {
+        if (user && user.type === "student") {
+          savePracticeTechnicalResult({
+            studentFirestoreId: user.id,
+            problem,
+            code,
+            language: "python",
+            totalTimeUsed,
+            evaluation: res.evaluation
+          }).catch(console.error);
+        }
+      }).catch(console.error);
     } else {
       toast.error("Failed to analyze submission: " + (res.message || "Unknown error"));
       // Still show some default or error state
@@ -110,7 +127,7 @@ export default function TechnicalRoundClient() {
          improvementTips: []
       });
     }
-  }, [problem, code]);
+  }, [problem, code, difficulty, timeLeft]);
 
   useEffect(() => {
     if (step === "coding" && timeLeft > 0) {

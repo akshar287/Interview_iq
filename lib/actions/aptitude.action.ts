@@ -533,3 +533,57 @@ export async function evaluateUserAptitude({
     return { success: false, message: error.message };
   }
 }
+
+export async function savePracticeAptitudeResult({
+  studentFirestoreId,
+  questions,
+  answers,
+  answerTimes,
+  totalTimeUsed,
+  score,
+  percentage,
+  aiFeedback,
+}: {
+  studentFirestoreId: string;
+  questions: Question[];
+  answers: Record<number, string>;
+  answerTimes: Record<number, number>;
+  totalTimeUsed: number;
+  score: number;
+  percentage: number;
+  aiFeedback: string;
+}) {
+  try {
+    const studentDoc = await db.collection("students").doc(studentFirestoreId).get();
+    if (!studentDoc.exists) {
+      return { success: false, message: "Student not found" };
+    }
+    const studentData = studentDoc.data()!;
+
+    await db.collection("aptitudeSubmissions").add({
+      examId: "practice",
+      sessionId: null,
+      studentId: studentData.studentId || null,
+      studentName: studentData.name || null,
+      studentYear: studentData.year || null,
+      studentBranch: studentData.branch || null,
+      collegeId: studentData.collegeId || null,
+      studentFirestoreId,
+      answers,
+      answerTimes,
+      totalTimeUsed,
+      score,
+      totalQuestions: questions.length,
+      percentage,
+      autoSubmitted: false,
+      aiFeedback,
+      submittedAt: new Date().toISOString(),
+      isPractice: true,
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Save practice result error:", error);
+    return { success: false, message: error.message };
+  }
+}

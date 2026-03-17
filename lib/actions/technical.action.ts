@@ -525,3 +525,48 @@ Respond with ONLY valid JSON strictly matching this Zod schema:
     return { success: false, message: error.message };
   }
 }
+
+export async function savePracticeTechnicalResult({
+  studentFirestoreId,
+  problem,
+  code,
+  language,
+  totalTimeUsed,
+  evaluation,
+}: {
+  studentFirestoreId: string;
+  problem: any;
+  code: string;
+  language: string;
+  totalTimeUsed: number;
+  evaluation: any;
+}) {
+  try {
+    const studentDoc = await db.collection("students").doc(studentFirestoreId).get();
+    if (!studentDoc.exists) return { success: false, message: "Student not found" };
+    const studentData = studentDoc.data()!;
+
+    await db.collection("technicalSubmissions").add({
+      examId: "practice",
+      sessionId: null,
+      studentId: studentData.studentId || null,
+      studentName: studentData.name || null,
+      studentYear: studentData.year || null,
+      studentBranch: studentData.branch || null,
+      collegeId: studentData.collegeId || null,
+      studentFirestoreId,
+      codes: { 0: { language, code } },
+      totalTimeUsed,
+      score: evaluation.score || 0,
+      percentage: evaluation.score || 0,
+      autoSubmitted: false,
+      aiFeedback: JSON.stringify(evaluation),
+      submittedAt: new Date().toISOString(),
+      isPractice: true,
+    });
+    return { success: true };
+  } catch (error: any) {
+    console.error("Save practice tech error:", error);
+    return { success: false, message: error.message };
+  }
+}
