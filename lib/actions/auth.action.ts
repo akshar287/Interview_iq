@@ -215,6 +215,84 @@ export async function isAuthenticated() {
   }
 }
 
+// ─── Student Session via Cookie ────────────────────────────────────────────
+
+export async function signInAsStudent({
+  studentId,
+  password,
+}: {
+  studentId: string;
+  password: string;
+}) {
+  try {
+    const snapshot = await db
+      .collection("students")
+      .where("studentId", "==", studentId)
+      .get();
+
+    if (snapshot.empty) {
+      return { success: false, message: "Student ID not found." };
+    }
+
+    const studentDoc = snapshot.docs[0];
+    const studentData = studentDoc.data();
+
+    if (studentData.password !== password) {
+      return { success: false, message: "Incorrect password." };
+    }
+
+    const student = {
+      firestoreId: studentDoc.id,
+      studentId: studentData.studentId,
+      name: studentData.name,
+      year: studentData.year,
+      branch: studentData.branch,
+      collegeId: studentData.collegeId,
+      collegeName: studentData.collegeName,
+    };
+
+    // Store session in an HTTP-only cookie so server components can read it
+    const cookieStore = await cookies();
+    cookieStore.set("studentSession", JSON.stringify(student), {
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      sameSite: "lax",
+    });
+
+    return { success: true, student };
+  } catch (error: any) {
+    return { success: false, message: `Login failed: ${error.message}` };
+  }
+}
+
+export async function getStudentFromSession() {
+  try {
+    const cookieStore = await cookies();
+    const raw = cookieStore.get("studentSession")?.value;
+    if (!raw) return null;
+    return JSON.parse(raw) as {
+      firestoreId: string;
+      studentId: string;
+      name: string;
+      year: string;
+      branch: string;
+      collegeId: string;
+      collegeName: string;
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function clearStudentSession() {
+  const cookieStore = await cookies();
+  cookieStore.delete("studentSession");
+}
+
+// ─── End Student Session ────────────────────────────────────────────────────
+
 export async function getCurrentUser(): Promise<User | null> {
   try {
     const cookieStore = await cookies();
