@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import Link from "next/link";
 import Image from "next/image";
 import { ReactNode } from "react";
@@ -9,16 +7,15 @@ import { isAuthenticated, getCurrentUser, signOut, getStudentFromSession, clearS
 import { Button } from "@/components/ui/button";
 import { LogOut, GraduationCap } from "lucide-react";
 import AmbientSound from "@/components/AmbientSound";
+import SecondaryNavbar from "@/components/SecondaryNavbar";
 
 const Layout = async ({ children }: { children: ReactNode }) => {
   const isUserAuthenticated = await isAuthenticated();
+  const user = await getCurrentUser();
 
   // Redirect college accounts to the college module
-  if (isUserAuthenticated) {
-    const currentUser = await getCurrentUser();
-    if (currentUser?.type === "college") {
-      redirect("/college/dashboard");
-    }
+  if (isUserAuthenticated && user?.type === "college") {
+    redirect("/college/dashboard");
   }
 
   // Check if a student is logged in via the student session cookie
@@ -114,9 +111,13 @@ const Layout = async ({ children }: { children: ReactNode }) => {
         )}
       </nav>
 
+      {/* Secondary Navbar for authenticated users */}
+      {isUserAuthenticated && user?.type === "user" && (
+        <SecondaryNavbar />
+      )}
+
       {children}
 
-      {/* Ambient office sound — plays softly in the background */}
       <AmbientSound />
     </div>
   );

@@ -430,3 +430,106 @@ export async function studentLogin({
     return { success: false, message: `Login failed: ${error.message}` };
   }
 }
+
+export async function generateAptitudeExam({
+  category,
+  numQuestions,
+}: {
+  category: string | string[];
+  numQuestions: number;
+}) {
+  try {
+    const categoryString = Array.isArray(category) ? category.join(", ") : category;
+    
+    const timestamp = new Date().toISOString();
+    
+    const prompt = `
+Generate a ${categoryString} aptitude exam for a student.
+Session Timestamp: ${timestamp}
+Number of questions: ${numQuestions}
+
+Each question should be unique, challenging, and suitable for placement preparation.
+Category Focus: ${categoryString}
+
+CRITICAL: Include "pattern-based" aptitude questions in the set (e.g., number series, shape patterns, or logical sequence patterns) where appropriate for the selected categories.
+
+VARIETY REQUIREMENT: Ensure the questions are fresh, avoid common clichés, and provide a unique variety of scenarios to ensure every session feels different. Do not repeat questions from previous sessions.
+
+Respond with ONLY valid JSON strictly matching this Zod schema:
+{
+  "questions": [
+    {
+      "question": string,
+      "optionA": string,
+      "optionB": string,
+      "optionC": string,
+      "optionD": string,
+      "correctAnswer": "A" | "B" | "C" | "D"
+    }
+  ]
+}
+    `;
+
+    const { text } = await generateText({
+      model: google("gemini-flash-latest"),
+      prompt,
+      temperature: 0.9,
+    });
+
+    // Clean any potential markdown junk
+    const cleanJson = text.replace(/```json|```/g, "").trim();
+    const data = JSON.parse(cleanJson);
+
+    return { success: true, questions: data.questions };
+  } catch (error: any) {
+    console.error("Generate Exam Error:", error);
+    return { success: false, message: error.message };
+  }
+}
+
+export async function evaluateUserAptitude({
+  questions,
+  answers,
+  answerTimes,
+  totalTimeUsed,
+}: {
+  questions: Question[];
+  answers: Record<number, string>;
+  answerTimes: Record<number, number>;
+  totalTimeUsed: number;
+}) {
+  try {
+    const feedbackJson = await generateAIFeedback(questions, answers, answerTimes, totalTimeUsed);
+    
+    // Attempt to parse JSON from binary/text response
+    let evaluation;
+    try {
+      evaluation = JSON.parse(feedbackJson.replace(/```json|```/g, "").trim());
+    } catch (e) {
+      // Fallback if AI didn't return valid JSON
+      evaluation = {
+        overallSummary: feedbackJson,
+        strengths: [],
+        weakAreas: [],
+        improvementTips: [],
+        studyPlan: []
+      };
+    }
+    
+    let score = 0;
+    questions.forEach((q, idx) => {
+      if (answers[idx] === q.correctAnswer) score++;
+    });
+    const percentage = Math.round((score / questions.length) * 100);
+
+    return { 
+      success: true, 
+      score, 
+      percentage, 
+      evaluation 
+    };
+  } catch (error: any) {
+    console.error("Evaluation Error:", error);
+    return { success: false, message: error.message };
+  }
+}
