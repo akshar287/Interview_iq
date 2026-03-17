@@ -186,7 +186,7 @@ export async function collegeSignIn({
 export async function signOut() {
   const cookieStore = await cookies();
   cookieStore.delete("session");
-  redirect("/sign-in");
+  redirect("/");
 }
 
 export async function isAuthenticated() {

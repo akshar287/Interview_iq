@@ -32,7 +32,7 @@ const Layout = async ({ children }: { children: ReactNode }) => {
   async function handleStudentSignOut() {
     "use server";
     await clearStudentSession();
-    redirect("/sign-in");
+    redirect("/");
   }
 
   return (

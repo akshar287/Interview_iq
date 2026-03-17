@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: "An AI-powered platform for preparing for mock interviews",
 };
 
+import GlobalBackButton from "@/components/GlobalBackButton";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,7 +25,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${monaSans.className} antialiased pattern`}>
         {children}
-
+        <GlobalBackButton />
         <Toaster />
       </body>
     </html>
