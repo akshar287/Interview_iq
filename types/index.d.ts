@@ -43,7 +43,8 @@ interface User {
   name: string;
   email: string;
   id: string;
-  type?: "user" | "college";
+  type?: "user" | "college" | "student";
+  tokens?: number;
   isIntern?: boolean;
   companyId?: string;
   role?: string;

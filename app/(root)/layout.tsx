@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { isAuthenticated, getCurrentUser, signOut, getStudentFromSession, clearStudentSession } from "@/lib/actions/auth.action";
 import { Button } from "@/components/ui/button";
-import { LogOut, GraduationCap } from "lucide-react";
+import { LogOut } from "lucide-react";
 import AmbientSound from "@/components/AmbientSound";
 import SecondaryNavbar from "@/components/SecondaryNavbar";
 
@@ -47,19 +47,7 @@ const Layout = async ({ children }: { children: ReactNode }) => {
           <h2 className="text-2xl font-bold tracking-tight text-white">VoxIntel</h2>
         </Link>
 
-        {/* Middle nav area */}
-        <div className="flex items-center gap-2">
-          {/* Show College Exam nav item ONLY when a student is logged in */}
-          {student && (
-            <Link
-              href="/student/exam"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all bg-primary-200/10 text-primary-200 border border-primary-200/20 hover:bg-primary-200/20"
-            >
-              <GraduationCap size={15} />
-              College Exam
-            </Link>
-          )}
-        </div>
+
 
         {/* Right side: sign-in links or sign-out button */}
         {!isUserAuthenticated && !student && (
@@ -72,9 +60,6 @@ const Layout = async ({ children }: { children: ReactNode }) => {
             </Link>
             <Link href="/college/sign-in" className="text-white/70 hover:text-white font-medium transition-colors">
               College
-            </Link>
-            <Link href="/student/login" className="text-white/70 hover:text-white font-medium transition-colors">
-              Student
             </Link>
           </div>
         )}
@@ -111,10 +96,14 @@ const Layout = async ({ children }: { children: ReactNode }) => {
         )}
       </nav>
 
-      {/* Secondary Navbar for authenticated users */}
-      {isUserAuthenticated && user?.type === "user" && (
-        <SecondaryNavbar />
-      )}
+      {/* Secondary Navbar — shown for authenticated users AND student sessions */}
+      {(isUserAuthenticated && user?.type === "user") || student ? (
+        <SecondaryNavbar 
+          showCollegeExam={!!student} 
+          tokens={student ? student.tokens : (user?.tokens || 0)}
+        />
+      ) : null}
+
 
       {children}
 

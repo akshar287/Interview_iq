@@ -11,6 +11,9 @@ import { generateTechnicalProblem, evaluateTechnicalSubmission } from "@/lib/act
 import CodeEditor from "@/components/CodeEditor";
 import { toast } from "sonner";
 import { BarChart3, TrendingUp, Target, CalendarDays, BookOpen as BookOpenIcon, CheckCircle2 as CheckCircle2Icon } from "lucide-react";
+import { getCurrentUser } from "@/lib/actions/auth.action";
+import { deductTokens } from "@/lib/actions/billing.action";
+import { useRouter } from "next/navigation";
 
 interface Problem {
   title: string;
@@ -24,6 +27,7 @@ interface Problem {
 }
 
 export default function TechnicalRoundClient() {
+  const router = useRouter();
   const [step, setStep] = useState<"difficulty" | "generating" | "coding" | "result">("difficulty");
   const [difficulty, setDifficulty] = useState<'Easy' | 'Medium' | 'Difficult' | null>(null);
   const [problem, setProblem] = useState<Problem | null>(null);
@@ -37,6 +41,22 @@ export default function TechnicalRoundClient() {
 
   const startExam = async (diff: 'Easy' | 'Medium' | 'Difficult') => {
     setDifficulty(diff);
+    const user = await getCurrentUser();
+    if (!user) {
+      toast.error("Please sign in to start the exam.");
+      router.push("/sign-in");
+      return;
+    }
+
+    // Token gating
+    const collection = user.type === "student" ? "students" : "users";
+    const tokenResult = await deductTokens(user.id, 50, `Technical Practice Round (${diff})`, collection);
+    if (!tokenResult.success) {
+      toast.error("Insufficient tokens. Please upgrade your plan.");
+      router.push("/pricing");
+      return;
+    }
+    
     setStep("generating");
     
     const res = await generateTechnicalProblem(diff);

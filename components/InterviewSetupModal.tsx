@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { getStudentFromSession } from "@/lib/actions/auth.action";
 
 const POSITIONS = [
     "Software Engineer",
@@ -68,6 +69,8 @@ export default function InterviewSetupModal({
         const toastId = toast.loading("Saving your profile...");
 
         try {
+            const student = await getStudentFromSession();
+            
             const payload = {
                 userId,
                 fullName: form.fullName,
@@ -75,6 +78,7 @@ export default function InterviewSetupModal({
                 experience: form.experience,
                 resumeFileName: resumeFile?.name || null,
                 createdAt: new Date().toISOString(),
+                collegeId: student?.collegeId || null,
             };
 
             const res = await fetch("/api/interview-setup", {

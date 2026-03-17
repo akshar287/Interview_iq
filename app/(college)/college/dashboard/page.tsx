@@ -88,33 +88,68 @@ const CollegeDashboard = async () => {
         </Link>
       </section>
 
-      {/* Recent Students */}
+      {/* Recent Students - Grouped by Department */}
       {students.length > 0 && (
-        <section className="flex flex-col gap-4">
-          <h2 className="text-2xl font-bold">Recent Students</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {students.slice(0, 6).map((student: any) => (
-              <div key={student.id} className="glass-card p-6 border-white/5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="size-10 rounded-full bg-primary-200/20 flex items-center justify-center text-primary-200 font-bold text-lg">
-                    {student.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white">{student.name}</p>
-                    <p className="text-white/40 text-xs">{student.branch} • Year {student.year}</p>
-                  </div>
-                </div>
-                <p className="text-white/30 text-xs font-mono bg-white/5 px-3 py-1 rounded-lg">
-                  ID: {student.studentId}
-                </p>
-                <p className="text-white/30 text-xs font-mono bg-white/5 px-3 py-1 rounded-lg">
-                  Password: <span className="text-yellow-300">{student.password}</span>
-                </p>
-              </div>
-            ))}
+        <section className="flex flex-col gap-10">
+          <div className="flex items-center justify-between">
+            <h2 className="text-3xl font-bold">Students by Department</h2>
           </div>
+          
+          {Object.entries(
+            students.reduce((acc: any, student: any) => {
+              const branch = student.branch || "General";
+              if (!acc[branch]) acc[branch] = [];
+              acc[branch].push(student);
+              return acc;
+            }, {})
+          ).map(([branch, branchStudents]: [string, any]) => (
+            <div key={branch} className="flex flex-col gap-6">
+              <div className="flex items-center gap-4">
+                <div className="h-px flex-1 bg-white/10" />
+                <h3 className="text-xl font-semibold text-primary-200 uppercase tracking-widest px-4 py-1 bg-primary-200/10 rounded-full border border-primary-200/20">
+                  {branch}
+                </h3>
+                <div className="h-px flex-1 bg-white/10" />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {branchStudents.map((student: any) => (
+                  <Link
+                    key={student.id}
+                    href={`/college/dashboard/student/${student.id}`}
+                    className="glass-card p-6 border-white/5 hover:border-primary-200/40 transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="size-12 rounded-2xl bg-primary-200/20 flex items-center justify-center text-primary-200 font-bold text-xl group-hover:scale-110 transition-transform">
+                          {student.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-bold text-white text-lg">{student.name}</p>
+                          <p className="text-white/40 text-xs">Year {student.year}</p>
+                        </div>
+                      </div>
+                      <ArrowRight size={18} className="text-white/20 group-hover:text-primary-200 transition-colors" />
+                    </div>
+                    
+                    <div className="flex flex-col gap-2">
+                       <div className="flex items-center justify-between text-xs px-3 py-2 bg-white/5 rounded-xl border border-white/5">
+                        <span className="text-white/40">Student ID</span>
+                        <span className="text-white/80 font-mono">{student.studentId}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs px-3 py-2 bg-white/5 rounded-xl border border-white/5">
+                        <span className="text-white/40">Tokens</span>
+                        <span className="text-primary-200 font-bold">{student.tokens}</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
         </section>
       )}
+
     </div>
   );
 };

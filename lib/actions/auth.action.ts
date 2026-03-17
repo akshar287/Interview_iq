@@ -44,6 +44,7 @@ export async function signUp({
     await db.collection("users").doc(uid).set({
       name,
       email,
+      tokens: 0,
       createdAt: new Date(),
     });
 
@@ -193,25 +194,26 @@ export async function isAuthenticated() {
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get("session");
 
-    if (!sessionCookie?.value) {
-      return false;
+    if (sessionCookie?.value) {
+      const decodedToken = await auth.verifySessionCookie(
+        sessionCookie.value,
+        true
+      );
+
+      const userRecord = await db.collection("users").doc(decodedToken.uid).get();
+      if (userRecord.exists) return true;
+
+      const collegeRecord = await db.collection("college").doc(decodedToken.uid).get();
+      if (collegeRecord.exists) return true;
     }
 
-    const decodedToken = await auth.verifySessionCookie(
-      sessionCookie.value,
-      true
-    );
-
-    const userRecord = await db.collection("users").doc(decodedToken.uid).get();
-
-    if (userRecord.exists) return true;
-
-    const collegeRecord = await db.collection("college").doc(decodedToken.uid).get();
-
-    return !!collegeRecord.exists;
+    // Fallback to student session
+    const student = await getStudentFromSession();
+    return !!student;
   } catch (error) {
-    console.error("Auth check error:", error);
-    return false;
+    // If Firebase check fails, still try student fallback
+    const student = await getStudentFromSession();
+    return !!student;
   }
 }
 
@@ -249,6 +251,7 @@ export async function signInAsStudent({
       branch: studentData.branch,
       collegeId: studentData.collegeId,
       collegeName: studentData.collegeName,
+      tokens: studentData.tokens || 0,
     };
 
     // Store session in an HTTP-only cookie so server components can read it
@@ -272,7 +275,8 @@ export async function getStudentFromSession() {
     const cookieStore = await cookies();
     const raw = cookieStore.get("studentSession")?.value;
     if (!raw) return null;
-    return JSON.parse(raw) as {
+    
+    const sessionData = JSON.parse(raw) as {
       firestoreId: string;
       studentId: string;
       name: string;
@@ -280,7 +284,16 @@ export async function getStudentFromSession() {
       branch: string;
       collegeId: string;
       collegeName: string;
+      tokens: number;
     };
+
+    // Fetch real-time tokens from Firestore to avoid stale display
+    const studentDoc = await db.collection("students").doc(sessionData.firestoreId).get();
+    if (studentDoc.exists) {
+      sessionData.tokens = studentDoc.data()?.tokens || 0;
+    }
+
+    return sessionData;
   } catch {
     return null;
   }
@@ -297,38 +310,59 @@ export async function getCurrentUser(): Promise<User | null> {
   try {
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get("session");
+    if (sessionCookie?.value) {
+      const decodedToken = await auth.verifySessionCookie(
+        sessionCookie.value,
+        true
+      );
 
-    if (!sessionCookie?.value) {
-      return null;
+      let userRecord = await db.collection("users").doc(decodedToken.uid).get();
+      let type: "user" | "college" = "user";
+
+      if (!userRecord.exists) {
+        userRecord = await db.collection("college").doc(decodedToken.uid).get();
+        type = "college";
+      }
+
+      if (userRecord.exists) {
+        return {
+          id: decodedToken.uid,
+          name: userRecord.data()?.name || "",
+          email: userRecord.data()?.email || "",
+          type,
+          tokens: userRecord.data()?.tokens || 0,
+          isIntern: userRecord.data()?.isIntern || false,
+          companyId: userRecord.data()?.companyId || "",
+          role: userRecord.data()?.role || "",
+        };
+      }
     }
 
-    const decodedToken = await auth.verifySessionCookie(
-      sessionCookie.value,
-      true
-    );
-
-    let userRecord = await db.collection("users").doc(decodedToken.uid).get();
-    let type: "user" | "college" = "user";
-
-    if (!userRecord.exists) {
-      userRecord = await db.collection("college").doc(decodedToken.uid).get();
-      type = "college";
+    // Fallback to student session
+    const student = await getStudentFromSession();
+    if (student) {
+      return {
+        id: student.firestoreId,
+        name: student.name,
+        email: "",
+        type: "student" as any,
+        tokens: student.tokens,
+      };
     }
 
-    if (!userRecord.exists) {
-      return null;
-    }
-
-    return {
-      id: decodedToken.uid,
-      name: userRecord.data()?.name || "",
-      email: userRecord.data()?.email || "",
-      type,
-      isIntern: userRecord.data()?.isIntern || false,
-      companyId: userRecord.data()?.companyId || "",
-      role: userRecord.data()?.role || "",
-    };
+    return null;
   } catch (error) {
+    // If Firebase session fails, check for student session
+    const student = await getStudentFromSession();
+    if (student) {
+        return {
+            id: student.firestoreId,
+            name: student.name,
+            email: "", // Students might not have email in session
+            type: "student" as any,
+            tokens: student.tokens,
+        };
+    }
     console.error("GetCurrentUser error:", error);
     return null;
   }

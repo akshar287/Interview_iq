@@ -10,10 +10,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { generateAptitudeExam, evaluateUserAptitude, type Question } from "@/lib/actions/aptitude.action";
 import { toast } from "sonner";
+import { getCurrentUser } from "@/lib/actions/auth.action";
+import { deductTokens } from "@/lib/actions/billing.action";
+import { useRouter } from "next/navigation";
 
 type AptitudeStep = "setup" | "generating" | "exam" | "results";
 
 export default function AptitudeRoundClient() {
+  const router = useRouter();
   const [step, setStep] = useState<AptitudeStep>("setup");
   const [selectedCategories, setSelectedCategories] = useState<string[]>(["Numerics", "Logical Reasoning", "Verbal"]);
   const [numQuestions, setNumQuestions] = useState(10);
@@ -42,6 +46,22 @@ export default function AptitudeRoundClient() {
     setTotalTimeUsed(0);
     setEvaluation(null);
     
+    const user = await getCurrentUser();
+    if (!user) {
+      toast.error("Please sign in to start the exam.");
+      router.push("/sign-in");
+      return;
+    }
+
+    // Token gating
+    const collection = user.type === "student" ? "students" : "users";
+    const tokenResult = await deductTokens(user.id, 50, "Aptitude Practice Round", collection);
+    if (!tokenResult.success) {
+      toast.error("Insufficient tokens. Please upgrade your plan.");
+      router.push("/pricing");
+      return;
+    }
+    
     setStep("generating");
     const res = await generateAptitudeExam({ category: selectedCategories, numQuestions });
     
@@ -51,6 +71,7 @@ export default function AptitudeRoundClient() {
       setStep("exam");
       startTimeRef.current = Date.now();
     } else {
+      // Refund tokens if generation fails? Optional but fair
       toast.error("Failed to generate exam: " + res.message);
       setStep("setup");
     }

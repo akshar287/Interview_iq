@@ -4,7 +4,7 @@ import { db } from "@/firebase/admin";
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { userId, fullName, position, experience, resumeFileName, createdAt } = body;
+        const { userId, fullName, position, experience, resumeFileName, createdAt, collegeId } = body;
 
         if (!userId || !position || !experience) {
             return NextResponse.json(
@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
             type: "Technical",
             finalized: false,
             resumeFileName: resumeFileName || null,
+            collegeId: collegeId || null,
             createdAt: createdAt || new Date().toISOString(),
         });
 
