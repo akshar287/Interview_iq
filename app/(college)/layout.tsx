@@ -67,7 +67,7 @@ const CollegeLayout = async ({ children }: { children: ReactNode }) => {
               <Image src="/careerly-icon.png" alt="Careerly Logo" width={32} height={32} className="rounded-md" />
             </div>
             <div className="flex flex-col">
-              <h2 className="text-xl font-black tracking-tighter text-white italic uppercase leading-none">Careerly</h2>
+              <h2 className="text-xl font-black tracking-tighter italic uppercase leading-none bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(90deg, #2dd4bf 0%, #f97316 100%)' }}>Careerly</h2>
               <span className="text-[10px] text-primary-200 font-bold tracking-widest uppercase mt-0.5">College Portal</span>
             </div>
           </Link>

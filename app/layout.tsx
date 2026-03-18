@@ -11,7 +11,12 @@ const monaSans = Mona_Sans({
 
 export const metadata: Metadata = {
   title: "Careerly",
-  description: "An AI-powered platform for preparing for mock interviews",
+  description: "AI-powered placement preparation suite — Aptitude, Technical & AI Mock Interviews",
+  icons: {
+    icon: "/careerly-icon.png",
+    shortcut: "/careerly-icon.png",
+    apple: "/careerly-icon.png",
+  },
 };
 
 import GlobalBackButton from "@/components/GlobalBackButton";
