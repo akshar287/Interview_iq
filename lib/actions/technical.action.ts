@@ -352,14 +352,15 @@ export async function executeCode({
   const mirrors = [
     "https://emkc.org/api/v2/piston/execute",
     "https://piston.rs/api/v2/execute",
+    "https://piston.engineering/api/v2/execute",
     "https://api.piston.rs/api/v2/execute",
-    "https://piston.is/api/v2/execute",
   ];
 
   let googleStatus = "Checking...";
   try {
     const check = await fetch("https://www.google.com", { 
       method: "HEAD", 
+      cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
     googleStatus = `Connected (${check.status})`;
@@ -367,21 +368,20 @@ export async function executeCode({
     googleStatus = `Failed (${e.message})`;
   }
 
-  let lastError = "";
+  let log = "";
 
   for (const mirror of mirrors) {
     try {
       console.log(`[Technical Action] Trying mirror: ${mirror}`);
       const res = await fetch(mirror, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           language,
           version,
           files: [{ content }],
         }),
+        cache: "no-store",
         signal: AbortSignal.timeout(15000), // 15s timeout
       });
 
@@ -391,17 +391,17 @@ export async function executeCode({
       }
       
       const errText = await res.text().catch(() => "No error body");
-      lastError = `Mirror ${mirror} failed (${res.status}): ${errText}`;
-      console.error(lastError);
+      log += `Mirror ${mirror} failed (${res.status}): ${errText.substring(0, 100)}. `;
+      console.error(log);
     } catch (error: any) {
-      lastError = `Mirror ${mirror} fetch error: ${error.message}`;
-      console.error(lastError);
+      log += `Mirror ${mirror} fetch error: ${error.message}. `;
+      console.error(log);
     }
   }
 
   return { 
     success: false, 
-    message: `${lastError}. [System Diagnostic] Google Connectivity: ${googleStatus}. Your local ISP or Firewall might be blocking coding API domains (emkc.org, piston.rs).` 
+    message: `${log} [System Diagnostic] Google Connectivity: ${googleStatus}. Your local ISP or Firewall might be blocking coding API domains (emkc.org, piston.rs).` 
   };
 }
 
