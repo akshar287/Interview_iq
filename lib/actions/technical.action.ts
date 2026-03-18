@@ -352,8 +352,8 @@ export async function executeCode({
   const mirrors = [
     "https://emkc.org/api/v2/piston/execute",
     "https://piston.rs/api/v2/execute",
-    "https://piston.engineering/api/v2/execute",
-    "https://emacsx.piston.rs/api/v2/execute",
+    "https://api.piston.rs/api/v2/execute",
+    "https://piston.is/api/v2/execute",
   ];
 
   let googleStatus = "Checking...";
@@ -361,7 +361,6 @@ export async function executeCode({
     const check = await fetch("https://www.google.com", { 
       method: "HEAD", 
       signal: AbortSignal.timeout(5000),
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" }
     });
     googleStatus = `Connected (${check.status})`;
   } catch (e: any) {
@@ -377,7 +376,6 @@ export async function executeCode({
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         },
         body: JSON.stringify({
           language,
