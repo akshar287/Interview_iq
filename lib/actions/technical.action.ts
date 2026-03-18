@@ -340,6 +340,17 @@ Respond with ONLY valid JSON strictly matching this Zod schema:
   }
 }
 
+const WANDBOX_COMPILER_MAP: Record<string, string> = {
+  javascript: "nodejs-18.15.0",
+  typescript: "typescript-5.0.2",
+  python: "cpython-3.10.11",
+  java: "openjdk-20",
+  cpp: "gcc-13.1.0",
+  c: "gcc-13.1.0",
+  go: "go-1.20.4",
+  rust: "rust-1.70.0",
+};
+
 export async function executeCode({
   language,
   version,
@@ -349,60 +360,50 @@ export async function executeCode({
   version: string;
   content: string;
 }) {
-  const mirrors = [
-    "https://emkc.org/api/v2/piston/execute",
-    "https://piston.rs/api/v2/execute",
-    "https://piston.engineering/api/v2/execute",
-    "https://api.piston.rs/api/v2/execute",
-  ];
-
-  let googleStatus = "Checking...";
   try {
-    const check = await fetch("https://www.google.com", { 
-      method: "HEAD", 
+    const compiler = WANDBOX_COMPILER_MAP[language.toLowerCase()] || "cpython-3.10.11";
+    
+    console.log(`[Technical Action] Executing via Wandbox: ${language} -> ${compiler}`);
+    
+    const res = await fetch("https://wandbox.org/api/compile.json", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        compiler,
+        code: content,
+        save: false,
+      }),
       cache: "no-store",
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(20000), // 20s timeout for execution
     });
-    googleStatus = `Connected (${check.status})`;
-  } catch (e: any) {
-    googleStatus = `Failed (${e.message})`;
-  }
 
-  let log = "";
-
-  for (const mirror of mirrors) {
-    try {
-      console.log(`[Technical Action] Trying mirror: ${mirror}`);
-      const res = await fetch(mirror, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          language,
-          version,
-          files: [{ content }],
-        }),
-        cache: "no-store",
-        signal: AbortSignal.timeout(15000), // 15s timeout
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        return { success: true, data };
-      }
-      
-      const errText = await res.text().catch(() => "No error body");
-      log += `Mirror ${mirror} failed (${res.status}): ${errText.substring(0, 100)}. `;
-      console.error(log);
-    } catch (error: any) {
-      log += `Mirror ${mirror} fetch error: ${error.message}. `;
-      console.error(log);
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Wandbox API error (${res.status}): ${err.substring(0, 100)}`);
     }
-  }
 
-  return { 
-    success: false, 
-    message: `${log} [System Diagnostic] Google Connectivity: ${googleStatus}. Your local ISP or Firewall might be blocking coding API domains (emkc.org, piston.rs).` 
-  };
+    const wandboxData = await res.json();
+    
+    // Transform Wandbox response to match Piston format for frontend compatibility
+    // Piston structure: { run: { stdout, stderr, code, signal, output } }
+    const pistonFormattedData = {
+      run: {
+        stdout: wandboxData.program_output || "",
+        stderr: wandboxData.program_error || wandboxData.compiler_error || "",
+        code: wandboxData.status === "0" ? 0 : 1,
+        signal: null,
+        output: (wandboxData.program_output || "") + (wandboxData.program_error || "") + (wandboxData.compiler_error || ""),
+      }
+    };
+
+    return { success: true, data: pistonFormattedData };
+  } catch (error: any) {
+    console.error("[Technical Action] Wandbox execution failed:", error.message);
+    return { 
+      success: false, 
+      message: `Execution failed: ${error.message}. Please try again later or contact support if the issue persists.` 
+    };
+  }
 }
 
 
