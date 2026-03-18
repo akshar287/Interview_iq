@@ -201,10 +201,21 @@ const AuthForm = ({ type, module = "user" }: { type: "sign-in" | "sign-up"; modu
   return (
     <div className="card-border lg:min-w-[566px]">
       <div className="flex flex-col gap-6 card py-14 px-10">
-        <div className="flex flex-row gap-2 justify-center">
-          <Image src="/careely-logo.png" alt="logo" height={32} width={32} className="rounded-md" />
-          <h2 className="text-primary-100">Careely</h2>
-        </div>
+            <div className="flex flex-col items-center gap-4 mb-8">
+              <div className="bg-primary-200 p-3 rounded-2xl shadow-lg shadow-primary-200/20">
+                <Image
+                  src="/careerly-icon.png"
+                  alt="Careerly Logo"
+                  width={48}
+                  height={48}
+                  className="rounded-lg"
+                />
+              </div>
+              <div className="text-center">
+                <h1 className="text-4xl font-black tracking-tighter text-white italic uppercase leading-none">Careerly</h1>
+                <p className="text-white/40 text-xs font-bold tracking-[0.2em] uppercase mt-2">AI Placement Suite</p>
+              </div>
+            </div>
 
         <h3>{module === "college" ? "College Portal" : "Practice job interviews with AI"}</h3>
 

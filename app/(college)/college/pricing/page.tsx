@@ -86,6 +86,7 @@ export default async function CollegePricingPage({ searchParams }: PageProps) {
                 <h1 className="text-5xl font-black text-white tracking-tight">
                     Select Your <span className="text-primary-200">Growth Plan</span>
                 </h1>
+                <p className="text-white/40 text-xs mt-4">Secure billing provided by Careerly</p>
                 <p className="text-white/50 text-xl max-w-2xl leading-relaxed">
                     Customized for <span className="text-white font-bold">{students} students</span>. 
                     Tokens are allocated to each student as soon as they are registered by you.

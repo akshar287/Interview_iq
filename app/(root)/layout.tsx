@@ -54,10 +54,10 @@ const Layout = async ({ children }: { children: ReactNode }) => {
 
         {/* Brand */}
         <Link href="/" className="flex items-center gap-3">
-          <div className="bg-primary-200 p-2 rounded-xl">
-            <Image src="/careely-logo.png" alt="Careely Logo" width={24} height={24} className="rounded-sm" />
+          <div className="bg-primary-200 p-1.5 rounded-xl">
+            <Image src="/careerly-icon.png" alt="Careerly Logo" width={32} height={32} className="rounded-md" />
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-white">Careely</h2>
+          <h2 className="text-2xl font-black tracking-tighter text-white italic uppercase">Careerly</h2>
         </Link>
 
 

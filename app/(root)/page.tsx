@@ -123,7 +123,7 @@ async function Home() {
 
             <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter leading-[0.95] animate-in fade-in slide-in-from-bottom-8 duration-1000">
               Secure Your Future <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-200 to-blue-400">With Talent IQ</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-200 to-blue-400">With Careerly</span>
             </h1>
 
             <p className="text-xl md:text-2xl text-white/50 max-w-3xl mx-auto leading-relaxed font-medium animate-in fade-in slide-in-from-bottom-8 delay-200 duration-1000">
@@ -252,7 +252,7 @@ async function Home() {
         <section className="max-w-3xl mx-auto px-6 py-32 space-y-12">
             <div className="text-center space-y-4">
                 <h2 className="text-4xl font-black text-white">Common Questions</h2>
-                <p className="text-white/50">Everything you need to know about the Talent IQ platform.</p>
+                <p className="text-white/50">Everything you need to know about the Careerly platform.</p>
             </div>
             
             <div className="space-y-4">

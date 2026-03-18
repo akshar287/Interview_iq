@@ -10,8 +10,11 @@
   --color-destructive-100: #f75353;
   --color-destructive-200: #c44141;
 
-  --color-primary-100: #dddfff;
-  --color-primary-200: #cac5fe;
+  --color-primary-100: #ccfbf1;
+  --color-primary-200: #2dd4bf;
+
+  --color-secondary-100: #ffedd5;
+  --color-secondary-200: #f97316;
 
   --color-light-100: #d6e0ff;
   --color-light-400: #6870a6;
@@ -295,7 +298,7 @@
 
   .btn-glossy {
     @apply relative overflow-hidden px-6 py-2.5 rounded-2xl font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(45,212,191,0.2)];
-    background: linear-gradient(135deg, #2dd4bf 0%, #0d9488 100%);
+    background: linear-gradient(135deg, var(--color-primary-200) 0%, #0d9488 100%);
     color: #042f2e;
   }
 
@@ -336,25 +339,25 @@
 @utility dark-gradient {
   background-color: #08090d;
   background-image:
-    radial-gradient(900px circle at 15% 10%, rgba(202, 197, 254, 0.14), transparent 45%),
-    radial-gradient(700px circle at 90% 0%, rgba(73, 222, 80, 0.10), transparent 40%),
-    linear-gradient(to bottom, #1a1c24 0%, #08090d 70%);
+    radial-gradient(900px circle at 15% 10%, rgba(45, 212, 191, 0.12), transparent 45%),
+    radial-gradient(700px circle at 90% 0%, rgba(249, 115, 22, 0.08), transparent 40%),
+    linear-gradient(to bottom, #0f172a 0%, #08090d 70%);
 }
 
 @utility border-gradient {
   background-image: linear-gradient(
     135deg,
-    rgba(202, 197, 254, 0.45),
+    rgba(45, 212, 191, 0.45),
     rgba(255, 255, 255, 0.12),
-    rgba(73, 222, 80, 0.18)
+    rgba(249, 115, 22, 0.18)
   );
 }
 
 @utility pattern {
   background-image:
-    radial-gradient(1100px circle at 10% 15%, rgba(202, 197, 254, 0.16), transparent 45%),
-    radial-gradient(900px circle at 95% 5%, rgba(73, 222, 80, 0.10), transparent 45%),
-    radial-gradient(700px circle at 50% 85%, rgba(202, 197, 254, 0.08), transparent 40%),
+    radial-gradient(1100px circle at 10% 15%, rgba(45, 212, 191, 0.14), transparent 45%),
+    radial-gradient(900px circle at 95% 5%, rgba(249, 115, 22, 0.08), transparent 45%),
+    radial-gradient(700px circle at 50% 85%, rgba(45, 212, 191, 0.06), transparent 40%),
     url("/pattern.png");
   background-repeat: no-repeat, no-repeat, no-repeat, repeat;
   background-position: 0% 0%, 100% 0%, 50% 100%, top;

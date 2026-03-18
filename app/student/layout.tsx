@@ -35,18 +35,18 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
         <nav className="flex items-center justify-between px-8 py-5 border-b border-white/10 bg-[#09090b]/80 backdrop-blur-xl sticky top-0 z-40">
           {/* Brand */}
           <Link href="/student/exam" className="flex items-center gap-3">
-            <div className="bg-primary-200 p-2 rounded-xl">
+            <div className="bg-primary-200 p-1.5 rounded-xl">
               <Image
-                src="/careely-logo.png"
-                alt="Careely"
-                width={20}
-                height={20}
-                className="rounded-sm"
+                src="/careerly-icon.png"
+                alt="Careerly"
+                width={30}
+                height={30}
+                className="rounded-md"
               />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-white font-bold text-lg">Careely</span>
-              <span className="text-primary-200 text-xs font-medium">Student Portal</span>
+              <span className="text-white font-black text-xl italic uppercase tracking-tighter">Careerly</span>
+              <span className="text-primary-200 text-[10px] font-bold uppercase tracking-widest">Student Portal</span>
             </div>
           </Link>
 
