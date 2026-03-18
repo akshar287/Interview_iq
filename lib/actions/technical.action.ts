@@ -349,6 +349,7 @@ export async function executeCode({
   version: string;
   content: string;
 }) {
+  const mirrors = [
     "https://emkc.org/api/v2/piston/execute",
     "https://piston.rs/api/v2/execute",
     "https://piston.engineering/api/v2/execute",
