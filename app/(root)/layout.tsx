@@ -50,29 +50,29 @@ const Layout = async ({ children }: { children: ReactNode }) => {
         <StudentPerformanceBanner />
       )}
 
-      <nav className="flex items-center justify-between py-6">
+      <nav className="flex items-center justify-between py-4 sm:py-6">
 
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-3">
-          <div className="bg-primary-200 p-1.5 rounded-xl">
-            <Image src="/careerly-icon.png" alt="Careerly Logo" width={32} height={32} className="rounded-md" />
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="bg-primary-200 p-1.5 rounded-xl flex-shrink-0">
+            <Image src="/careerly-icon.png" alt="Careerly Logo" width={28} height={28} className="rounded-md" />
           </div>
-          <h2 className="text-2xl font-black tracking-tighter italic uppercase"><span style={{ color: '#2dd4bf' }}>Career</span><span style={{ color: '#f97316' }}>ly</span></h2>
+          <h2 className="text-xl sm:text-2xl font-black tracking-tighter italic uppercase"><span style={{ color: '#2dd4bf' }}>Career</span><span style={{ color: '#f97316' }}>ly</span></h2>
         </Link>
-
-
 
         {/* Right side: sign-in links or sign-out button */}
         {!isUserAuthenticated && !student && (
-          <div className="flex items-center gap-6">
-            <Link href="/" className="text-white/70 hover:text-white font-medium transition-colors">
+          <div className="flex items-center gap-2 sm:gap-6">
+            <Link href="/" className="text-white/70 hover:text-white font-medium transition-colors text-sm sm:text-base hidden sm:block">
               Home
             </Link>
-            <Link href="/sign-in" className="text-white/70 hover:text-white font-medium transition-colors">
-              User
+            <Link href="/sign-in" className="text-white/70 hover:text-white font-medium transition-colors text-sm sm:text-base">
+              <span className="hidden sm:inline">User</span>
+              <span className="sm:hidden px-3 py-1.5 rounded-xl border border-white/20 text-xs">Sign In</span>
             </Link>
-            <Link href="/college/sign-in" className="text-white/70 hover:text-white font-medium transition-colors">
-              College
+            <Link href="/college/sign-in" className="text-white/70 hover:text-white font-medium transition-colors text-sm sm:text-base">
+              <span className="hidden sm:inline">College</span>
+              <span className="sm:hidden px-3 py-1.5 rounded-xl border border-primary-200/30 text-primary-200 text-xs">College</span>
             </Link>
           </div>
         )}
@@ -82,15 +82,15 @@ const Layout = async ({ children }: { children: ReactNode }) => {
           <form action={handleSignOut}>
             <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/5 gap-2 rounded-xl transition-all">
               <LogOut size={18} />
-              <span className="font-medium">Sign Out</span>
+              <span className="font-medium hidden sm:inline">Sign Out</span>
             </Button>
           </form>
         )}
 
         {/* Student-only sign-out (no Firebase session) */}
         {!isUserAuthenticated && student && (
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden sm:flex items-center gap-2">
               <div className="size-8 rounded-full bg-primary-200/20 flex items-center justify-center text-primary-200 font-bold text-sm">
                 {student.name.charAt(0).toUpperCase()}
               </div>
@@ -102,7 +102,7 @@ const Layout = async ({ children }: { children: ReactNode }) => {
             <form action={handleStudentSignOut}>
               <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/5 gap-2 rounded-xl transition-all">
                 <LogOut size={18} />
-                <span className="font-medium">Sign Out</span>
+                <span className="font-medium hidden sm:inline">Sign Out</span>
               </Button>
             </form>
           </div>

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut, Users, BookOpen, Code2, Shield, Calendar } from "lucide-react";
 import { db } from "@/firebase/admin";
 import { headers } from "next/headers";
+import CollegeMobileMenu from "@/components/CollegeMobileMenu";
 
 const CollegeLayout = async ({ children }: { children: ReactNode }) => {
   const isUserAuthenticated = await isAuthenticated();
@@ -60,21 +61,21 @@ const CollegeLayout = async ({ children }: { children: ReactNode }) => {
   return (
     <div className="root-layout">
       {/* College-specific top navbar */}
-      <nav className="flex items-center justify-between py-6 border-b border-white/10 mb-8">
-        <div className="flex items-center gap-6">
-          <Link href="/college/dashboard" className="flex items-center gap-3">
-            <div className="bg-primary-200 p-1.5 rounded-xl">
-              <Image src="/careerly-icon.png" alt="Careerly Logo" width={32} height={32} className="rounded-md" />
+      <nav className="flex items-center justify-between py-4 sm:py-6 border-b border-white/10 mb-6 sm:mb-8">
+        <div className="flex items-center gap-3 sm:gap-6">
+          <Link href="/college/dashboard" className="flex items-center gap-2.5">
+            <div className="bg-primary-200 p-1.5 rounded-xl flex-shrink-0">
+              <Image src="/careerly-icon.png" alt="Careerly Logo" width={30} height={30} className="rounded-md" />
             </div>
             <div className="flex flex-col">
-              <h2 className="text-xl font-black tracking-tighter italic uppercase leading-none"><span style={{ color: '#2dd4bf' }}>Career</span><span style={{ color: '#f97316' }}>ly</span></h2>
-              <span className="text-[10px] text-primary-200 font-bold tracking-widest uppercase mt-0.5">College Portal</span>
+              <h2 className="text-lg sm:text-xl font-black tracking-tighter italic uppercase leading-none"><span style={{ color: '#2dd4bf' }}>Career</span><span style={{ color: '#f97316' }}>ly</span></h2>
+              <span className="text-[10px] text-primary-200 font-bold tracking-widest uppercase mt-0.5 hidden sm:block">College Portal</span>
             </div>
           </Link>
 
           {collegeData?.plan && (
-            <div className={`flex items-center gap-3 px-4 py-2 rounded-2xl border ${isExpired ? 'border-red-500/20 bg-red-500/5' : 'border-primary-200/20 bg-primary-200/5'}`}>
-              <Shield size={14} className={isExpired ? 'text-red-400' : 'text-primary-200'} />
+            <div className={`hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-2xl border ${isExpired ? 'border-red-500/20 bg-red-500/5' : 'border-primary-200/20 bg-primary-200/5'}`}>
+              <Shield size={13} className={isExpired ? 'text-red-400' : 'text-primary-200'} />
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
                   <span className={`text-[10px] font-black uppercase tracking-widest ${isExpired ? 'text-red-400' : 'text-primary-200'}`}>
@@ -95,39 +96,35 @@ const CollegeLayout = async ({ children }: { children: ReactNode }) => {
           )}
         </div>
 
-        {/* College nav links - Only show if plan is active */}
+        {/* Desktop Nav links */}
         {hasPlan && (
-          <div className="flex items-center gap-2">
-            <Link
-              href="/college/dashboard/add-students"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/5 font-medium transition-all"
-            >
-              <Users size={16} />
-              Add Students
+          <div className="hidden md:flex items-center gap-1">
+            <Link href="/college/dashboard/add-students" className="flex items-center gap-2 px-3 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/5 font-medium text-sm transition-all">
+              <Users size={15} />
+              <span className="hidden lg:inline">Add Students</span>
             </Link>
-            <Link
-              href="/college/dashboard/aptitude-round"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/5 font-medium transition-all"
-            >
-              <BookOpen size={16} />
-              Aptitude Round
+            <Link href="/college/dashboard/aptitude-round" className="flex items-center gap-2 px-3 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/5 font-medium text-sm transition-all">
+              <BookOpen size={15} />
+              <span className="hidden lg:inline">Aptitude Round</span>
             </Link>
-            <Link
-              href="/college/dashboard/technical-round"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/5 font-medium transition-all"
-            >
-              <Code2 size={16} />
-              Technical Round
+            <Link href="/college/dashboard/technical-round" className="flex items-center gap-2 px-3 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/5 font-medium text-sm transition-all">
+              <Code2 size={15} />
+              <span className="hidden lg:inline">Technical Round</span>
             </Link>
           </div>
         )}
 
-        <form action={signOut}>
-          <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/5 gap-2 rounded-xl transition-all">
-            <LogOut size={18} />
-            <span className="font-medium">Sign Out</span>
-          </Button>
-        </form>
+        <div className="flex items-center gap-2">
+          {/* Desktop sign-out */}
+          <form action={signOut} className="hidden md:block">
+            <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/5 gap-2 rounded-xl transition-all">
+              <LogOut size={18} />
+              <span className="font-medium hidden lg:inline">Sign Out</span>
+            </Button>
+          </form>
+          {/* Mobile hamburger */}
+          <CollegeMobileMenu hasPlan={hasPlan} />
+        </div>
       </nav>
 
       {children}
