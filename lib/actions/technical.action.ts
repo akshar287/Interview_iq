@@ -341,14 +341,14 @@ Respond with ONLY valid JSON strictly matching this Zod schema:
 }
 
 const WANDBOX_COMPILER_MAP: Record<string, string> = {
-  javascript: "nodejs-18.15.0",
-  typescript: "typescript-5.0.2",
-  python: "cpython-3.10.11",
-  java: "openjdk-20",
-  cpp: "gcc-13.1.0",
-  c: "gcc-13.1.0",
-  go: "go-1.20.4",
-  rust: "rust-1.70.0",
+  javascript: "nodejs-20.17.0",
+  typescript: "typescript-5.6.2",
+  python: "cpython-3.13.8",
+  java: "openjdk-jdk-22+36",
+  cpp: "gcc-13.2.0",
+  c: "gcc-13.2.0-c",
+  go: "go-1.23.2",
+  rust: "rust-1.82.0",
 };
 
 export async function executeCode({
