@@ -272,3 +272,49 @@ export async function getCompanyInterviewsByRole(
     ...doc.data(),
   })) as Interview[];
 }
+
+// ── Performance summary for dashboard banner ───────────────────────────────
+
+export async function getUserPerformanceSummary(userId: string) {
+  try {
+    const feedbackSnap = await db
+      .collection("feedback")
+      .where("userId", "==", userId)
+      .get();
+
+    const feedbacks = feedbackSnap.docs.map((d) => d.data());
+    const interviewAvg = feedbacks.length > 0
+      ? Math.round(feedbacks.reduce((s, f) => s + (f.totalScore || 0), 0) / feedbacks.length)
+      : null;
+
+    // Practice aptitude results saved against userId (or firestoreId for students)
+    const aptSnap = await db
+      .collection("aptitudeSubmissions")
+      .where("studentFirestoreId", "==", userId)
+      .get();
+    const aptResults = aptSnap.docs.map((d) => d.data());
+    const aptAvg = aptResults.length > 0
+      ? Math.round(aptResults.reduce((s, r) => s + (r.percentage || 0), 0) / aptResults.length)
+      : null;
+
+    const techSnap = await db
+      .collection("technicalSubmissions")
+      .where("studentFirestoreId", "==", userId)
+      .get();
+    const techResults = techSnap.docs.map((d) => d.data());
+    const techAvg = techResults.length > 0
+      ? Math.round(techResults.reduce((s, r) => s + (r.percentage || 0), 0) / techResults.length)
+      : null;
+
+    return {
+      interviewAvg,
+      interviewCount: feedbacks.length,
+      aptAvg,
+      aptCount: aptResults.length,
+      techAvg,
+      techCount: techResults.length,
+    };
+  } catch {
+    return { interviewAvg: null, interviewCount: 0, aptAvg: null, aptCount: 0, techAvg: null, techCount: 0 };
+  }
+}

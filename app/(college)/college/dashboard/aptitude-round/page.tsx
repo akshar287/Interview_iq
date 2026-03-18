@@ -7,6 +7,8 @@ import {
   getSubmissionsBySession,
 } from "@/lib/actions/aptitude.action";
 import AptitudeSetupClient from "@/components/AptitudeSetupClient";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 const AptitudeRoundPage = async () => {
   const user = await getCurrentUser();
@@ -34,6 +36,12 @@ const AptitudeRoundPage = async () => {
 
   return (
     <div className="flex flex-col gap-10 pb-20">
+      <Link
+        href="/college/dashboard"
+        className="flex items-center gap-2 text-white/40 hover:text-white transition-colors w-fit text-sm font-medium"
+      >
+        <ArrowLeft size={16} /> Back to Dashboard
+      </Link>
       <AptitudeSetupClient
         collegeId={user.id}
         collegeName={user.name}

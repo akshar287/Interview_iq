@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 
 import { isAuthenticated, getCurrentUser, signOut } from "@/lib/actions/auth.action";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, BookOpen, Code2 } from "lucide-react";
+import { LogOut, Users, BookOpen, Code2, Shield, Calendar } from "lucide-react";
 import { db } from "@/firebase/admin";
 import { headers } from "next/headers";
 
@@ -27,7 +27,17 @@ const CollegeLayout = async ({ children }: { children: ReactNode }) => {
   // Check for active plan
   const collegeDoc = await db.collection("college").doc(currentUser.id).get();
   const collegeData = collegeDoc.data();
-  const hasPlan = !!collegeData?.plan;
+  
+  let hasPlan = !!collegeData?.plan;
+  let isExpired = false;
+
+  if (hasPlan && collegeData?.planExpiry) {
+    const expiryDate = new Date(collegeData.planExpiry);
+    if (expiryDate < new Date()) {
+      isExpired = true;
+      hasPlan = false; // Treat as no plan for access purposes
+    }
+  }
 
   // Get current path to avoid infinite redirect
   const headersList = await headers();
@@ -51,15 +61,39 @@ const CollegeLayout = async ({ children }: { children: ReactNode }) => {
     <div className="root-layout">
       {/* College-specific top navbar */}
       <nav className="flex items-center justify-between py-6 border-b border-white/10 mb-8">
-        <Link href="/college/dashboard" className="flex items-center gap-3">
-          <div className="bg-primary-200 p-2 rounded-xl">
-            <Image src="/logo.svg" alt="VoxIntel Logo" width={24} height={20} className="invert brightness-0" />
-          </div>
-          <div className="flex flex-col">
-            <h2 className="text-xl font-bold tracking-tight text-white leading-none">VoxIntel</h2>
-            <span className="text-xs text-primary-200 font-medium">College Portal</span>
-          </div>
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/college/dashboard" className="flex items-center gap-3">
+            <div className="bg-primary-200 p-2 rounded-xl">
+              <Image src="/logo.svg" alt="VoxIntel Logo" width={24} height={20} className="invert brightness-0" />
+            </div>
+            <div className="flex flex-col">
+              <h2 className="text-xl font-bold tracking-tight text-white leading-none">VoxIntel</h2>
+              <span className="text-xs text-primary-200 font-medium tracking-wide uppercase">College Portal</span>
+            </div>
+          </Link>
+
+          {collegeData?.plan && (
+            <div className={`flex items-center gap-3 px-4 py-2 rounded-2xl border ${isExpired ? 'border-red-500/20 bg-red-500/5' : 'border-primary-200/20 bg-primary-200/5'}`}>
+              <Shield size={14} className={isExpired ? 'text-red-400' : 'text-primary-200'} />
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${isExpired ? 'text-red-400' : 'text-primary-200'}`}>
+                    {collegeData.plan} Plan
+                  </span>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold border ${isExpired ? 'border-red-500/30 text-red-400 bg-red-500/10' : 'border-success-100/30 text-success-100 bg-success-100/10'}`}>
+                    {isExpired ? 'Expired' : 'Active'}
+                  </span>
+                </div>
+                {collegeData.planExpiry && (
+                  <div className="flex items-center gap-1.5 text-[9px] text-white/40 font-medium">
+                    <Calendar size={10} />
+                    {isExpired ? 'Expired on' : 'Expires'}: {new Date(collegeData.planExpiry).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* College nav links - Only show if plan is active */}
         {hasPlan && (

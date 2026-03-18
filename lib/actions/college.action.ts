@@ -100,11 +100,16 @@ export async function getCollegeDetails(collegeId: string) {
 
 export async function activateCollegePlan(collegeId: string, { plan, studentLimit, amount }: { plan: string, studentLimit: number, amount: number }) {
     try {
+        const expiryDate = new Date();
+        const durationMonths = plan === "pro" ? 6 : 3;
+        expiryDate.setMonth(expiryDate.getMonth() + durationMonths);
+
         await db.collection("college").doc(collegeId).update({
             plan,
             studentLimit,
             planAmount: amount,
             planActivatedAt: new Date().toISOString(),
+            planExpiry: expiryDate.toISOString(),
         });
 
         // Log transaction

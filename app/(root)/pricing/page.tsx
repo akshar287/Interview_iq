@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { Check, Zap, Crown, Shield, ArrowRight, Coins, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { addTokens } from "@/lib/actions/billing.action";
+import { addTokens, purchasePlan } from "@/lib/actions/billing.action";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { getCurrentUser, getStudentFromSession } from "@/lib/actions/auth.action";
+import { type User } from "@/types";
 
 const PLANS = [
   {
@@ -52,11 +55,76 @@ const PLANS = [
   },
 ];
 
+const TOPUP_PLANS = [
+  {
+    id: "topup-small",
+    name: "Small Top-up",
+    price: "149",
+    tokens: 200,
+    icon: Coins,
+    color: "text-blue-400",
+    bg: "bg-blue-400/10",
+    border: "border-white/10",
+    duration: "",
+    features: ["200 AI Tokens", "Instant activation", "No expiration"],
+  },
+  {
+    id: "topup-medium",
+    name: "Medium Top-up",
+    price: "299",
+    tokens: 500,
+    icon: Coins,
+    color: "text-primary-200",
+    bg: "bg-primary-200/10",
+    border: "border-primary-200/20",
+    duration: "",
+    popular: true,
+    features: ["500 AI Tokens", "Best value top-up", "No expiration"],
+  },
+  {
+    id: "topup-large",
+    name: "Large Top-up",
+    price: "449",
+    tokens: 1000,
+    icon: Coins,
+    color: "text-purple-400",
+    bg: "bg-purple-400/10",
+    border: "border-white/10",
+    duration: "",
+    features: ["1000 AI Tokens", "Intensive preparation", "No expiration"],
+  },
+];
+
 export default function PricingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isPlanActive, setIsPlanActive] = useState(false);
 
-  const handleUpgrade = async (planId: string, tokens: number, planName: string) => {
+  useEffect(() => {
+    async function init() {
+      const student = await getStudentFromSession();
+      if (student) {
+        toast.error("Students cannot manage billing. Please contact your college administrator.");
+        router.push("/student/dashboard");
+        return;
+      }
+
+      const u = await getCurrentUser();
+      setUser(u);
+      
+      if (u?.isPlanActive) {
+        setIsPlanActive(true);
+      }
+    }
+    init();
+  }, [router]);
+
+  const handleUpgrade = async (plan: any) => {
+    const planId = plan.id;
+    const tokens = plan.tokens;
+    const planName = plan.name;
+    
     setLoading(planId);
     
     // Simulate payment processing delay
@@ -65,10 +133,22 @@ export default function PricingPage() {
       {
         loading: `Processing payment for ${planName}...`,
         success: async () => {
-          const res = await addTokens(tokens, `Purchased ${planName}`);
+          let res;
+          if (planId.startsWith("topup")) {
+            res = await addTokens(tokens, `Top-up: ${planName}`);
+          } else {
+            const duration = planId === "pro" ? 1 : 3;
+            res = await purchasePlan({ planId, tokens, durationMonths: duration, planName });
+          }
+
           if (res.success) {
             router.refresh();
             setLoading(null);
+            // Re-check plan status
+            const freshUser = await getCurrentUser();
+            if (freshUser?.planExpiry && new Date(freshUser.planExpiry) > new Date()) {
+              setIsPlanActive(true);
+            }
             return `${planName} activated! ${tokens} tokens added.`;
           } else {
             setLoading(null);
@@ -83,6 +163,8 @@ export default function PricingPage() {
     );
   };
 
+  const activePlans = isPlanActive ? TOPUP_PLANS : PLANS;
+
   return (
     <div className="flex flex-col items-center justify-center py-20 px-6">
       <div className="max-w-4xl w-full text-center mb-16 space-y-4">
@@ -91,16 +173,36 @@ export default function PricingPage() {
           SaaS Mock Interview Platform
         </div>
         <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight">
-          Fuel Your AI <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-200 to-blue-400">Preparation</span>
+          {isPlanActive ? "Top-up Your" : "Fuel Your AI"} <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-200 to-blue-400">
+            {isPlanActive ? "Tokens" : "Preparation"}
+          </span>
         </h1>
         <p className="text-xl text-white/50 max-w-2xl mx-auto">
-          Choose a plan that fits your career goals. Get tokens to unlock premium AI mock interviews and deep technical assessments.
+          {isPlanActive 
+            ? (
+              <>
+                Your <span className="text-white font-bold">{user?.planId === 'premium' ? 'Premium' : 'Pro'}</span> plan is <span className="text-primary-200 font-bold">Active</span>
+                {user?.planExpiry ? (
+                  <> until <span className="text-white font-bold">{
+                    (typeof user.planExpiry === "string" 
+                      ? new Date(user.planExpiry) 
+                      : (user.planExpiry as any).toDate ? (user.planExpiry as any).toDate() : new Date(user.planExpiry)
+                    ).toLocaleDateString()
+                  }</span></>
+                ) : (
+                  <> (1 Month Duration)</>
+                )}
+                . Out of tokens? Top up now to continue your practice.
+              </>
+            )
+            : "Choose a plan that fits your career goals. Get tokens to unlock premium AI mock interviews and deep technical assessments."
+          }
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl">
-        {PLANS.map((plan) => (
+      <div className={`grid grid-cols-1 ${isPlanActive ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-8 w-full max-w-6xl`}>
+        {activePlans.map((plan) => (
           <div 
             key={plan.id}
             className={`glass-card relative p-10 flex flex-col gap-8 transition-all duration-500 hover:scale-[1.02] ${plan.border} ${plan.popular ? 'bg-primary-200/[0.03]' : ''}`}
@@ -120,7 +222,9 @@ export default function PricingPage() {
                   <span className="text-white font-black text-sm">₹</span>
                   <span className="text-5xl font-black text-white tracking-tight">{plan.price}</span>
                 </div>
-                <span className="text-white/30 text-xs font-bold uppercase tracking-widest mt-1">/ {plan.duration}</span>
+                {plan.duration && (
+                  <span className="text-white/30 text-xs font-bold uppercase tracking-widest mt-1">/ {plan.duration}</span>
+                )}
               </div>
             </div>
 
@@ -146,7 +250,7 @@ export default function PricingPage() {
             </ul>
 
             <Button
-              onClick={() => handleUpgrade(plan.id, plan.tokens, plan.name)}
+              onClick={() => handleUpgrade(plan)}
               disabled={loading !== null}
               className={`w-full h-16 rounded-2xl font-black text-lg transition-all active:scale-95 flex items-center gap-3 ${
                 plan.popular 

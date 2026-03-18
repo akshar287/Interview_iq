@@ -3,6 +3,7 @@
 import { auth, db } from "@/firebase/admin";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { type User } from "@/types";
 
 const SESSION_DURATION = 60 * 60 * 24 * 7;
 
@@ -194,26 +195,22 @@ export async function isAuthenticated() {
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get("session");
 
-    if (sessionCookie?.value) {
-      const decodedToken = await auth.verifySessionCookie(
-        sessionCookie.value,
-        true
-      );
+    if (!sessionCookie?.value) return false;
 
-      const userRecord = await db.collection("users").doc(decodedToken.uid).get();
-      if (userRecord.exists) return true;
+    const decodedToken = await auth.verifySessionCookie(
+      sessionCookie.value,
+      true
+    );
 
-      const collegeRecord = await db.collection("college").doc(decodedToken.uid).get();
-      if (collegeRecord.exists) return true;
-    }
+    const userRecord = await db.collection("users").doc(decodedToken.uid).get();
+    if (userRecord.exists) return true;
 
-    // Fallback to student session
-    const student = await getStudentFromSession();
-    return !!student;
+    const collegeRecord = await db.collection("college").doc(decodedToken.uid).get();
+    if (collegeRecord.exists) return true;
+
+    return false;
   } catch (error) {
-    // If Firebase check fails, still try student fallback
-    const student = await getStudentFromSession();
-    return !!student;
+    return false;
   }
 }
 
@@ -310,59 +307,64 @@ export async function getCurrentUser(): Promise<User | null> {
   try {
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get("session");
-    if (sessionCookie?.value) {
-      const decodedToken = await auth.verifySessionCookie(
-        sessionCookie.value,
-        true
-      );
+    if (!sessionCookie?.value) return null;
 
-      let userRecord = await db.collection("users").doc(decodedToken.uid).get();
-      let type: "user" | "college" = "user";
+    const decodedToken = await auth.verifySessionCookie(
+      sessionCookie.value,
+      true
+    );
 
-      if (!userRecord.exists) {
-        userRecord = await db.collection("college").doc(decodedToken.uid).get();
-        type = "college";
-      }
+    let userRecord = await db.collection("users").doc(decodedToken.uid).get();
+    let type: "user" | "college" = "user";
 
-      if (userRecord.exists) {
-        return {
-          id: decodedToken.uid,
-          name: userRecord.data()?.name || "",
-          email: userRecord.data()?.email || "",
-          type,
-          tokens: userRecord.data()?.tokens || 0,
-          isIntern: userRecord.data()?.isIntern || false,
-          companyId: userRecord.data()?.companyId || "",
-          role: userRecord.data()?.role || "",
-        };
-      }
+    if (!userRecord.exists) {
+      userRecord = await db.collection("college").doc(decodedToken.uid).get();
+      type = "college";
     }
 
-    // Fallback to student session
-    const student = await getStudentFromSession();
-    if (student) {
+    const userData = userRecord.data();
+
+    if (userData) {
+      let isPlanActive = false;
+      if (userData.planId) {
+        if (userData.planExpiry) {
+          const expiryDate = typeof userData.planExpiry === "string" 
+            ? new Date(userData.planExpiry) 
+            : (userData.planExpiry as any).toDate ? (userData.planExpiry as any).toDate() : new Date(userData.planExpiry);
+          if (expiryDate > new Date()) {
+            isPlanActive = true;
+          }
+        } else {
+          // Legacy support: if planId exists but no expiry, assume active
+          isPlanActive = true;
+        }
+      }
+
+      let planExpiryStr = "";
+      if (userData.planExpiry) {
+        const expiryDate = typeof userData.planExpiry === "string" 
+          ? new Date(userData.planExpiry) 
+          : (userData.planExpiry as any).toDate ? (userData.planExpiry as any).toDate() : new Date(userData.planExpiry);
+        planExpiryStr = expiryDate.toISOString();
+      }
+
       return {
-        id: student.firestoreId,
-        name: student.name,
-        email: "",
-        type: "student" as any,
-        tokens: student.tokens,
+        id: decodedToken.uid,
+        name: userData.name || "",
+        email: userData.email || "",
+        type,
+        tokens: userData.tokens || 0,
+        isIntern: userData.isIntern || false,
+        companyId: userData.companyId || "",
+        role: userData.role || "",
+        planId: userData.planId || "",
+        planExpiry: planExpiryStr,
+        isPlanActive,
       };
     }
 
     return null;
   } catch (error) {
-    // If Firebase session fails, check for student session
-    const student = await getStudentFromSession();
-    if (student) {
-        return {
-            id: student.firestoreId,
-            name: student.name,
-            email: "", // Students might not have email in session
-            type: "student" as any,
-            tokens: student.tokens,
-        };
-    }
     console.error("GetCurrentUser error:", error);
     return null;
   }

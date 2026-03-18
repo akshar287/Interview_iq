@@ -2,12 +2,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 import { isAuthenticated, getCurrentUser, signOut, getStudentFromSession, clearStudentSession } from "@/lib/actions/auth.action";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import AmbientSound from "@/components/AmbientSound";
 import SecondaryNavbar from "@/components/SecondaryNavbar";
+import UserPerformanceBanner from "@/components/UserPerformanceBanner";
+import StudentPerformanceBanner from "@/components/StudentPerformanceBanner";
 
 const Layout = async ({ children }: { children: ReactNode }) => {
   const isUserAuthenticated = await isAuthenticated();
@@ -37,6 +40,16 @@ const Layout = async ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="root-layout">
+      {/* Performance banner for authenticated regular users */}
+      {isUserAuthenticated && user?.type === "user" && (
+        <UserPerformanceBanner userId={user.id} />
+      )}
+      
+      {/* Performance banner for authenticated students */}
+      {!isUserAuthenticated && student && (
+        <StudentPerformanceBanner />
+      )}
+
       <nav className="flex items-center justify-between py-6">
 
         {/* Brand */}
@@ -66,7 +79,7 @@ const Layout = async ({ children }: { children: ReactNode }) => {
 
         {/* Normal authenticated user sign-out */}
         {isUserAuthenticated && (
-          <form action={signOut}>
+          <form action={handleSignOut}>
             <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/5 gap-2 rounded-xl transition-all">
               <LogOut size={18} />
               <span className="font-medium">Sign Out</span>
@@ -101,6 +114,7 @@ const Layout = async ({ children }: { children: ReactNode }) => {
         <SecondaryNavbar 
           showCollegeExam={!!student} 
           tokens={student ? student.tokens : (user?.tokens || 0)}
+          isPlanActive={user?.isPlanActive || false}
         />
       ) : null}
 

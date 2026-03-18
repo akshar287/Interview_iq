@@ -4,7 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
-import { BookOpen, Code2, GraduationCap } from "lucide-react";
+import { BookOpen, Code2, GraduationCap, LayoutDashboard } from "lucide-react";
+import StudentSignOutButton from "@/components/StudentSignOutButton";
+import StudentPerformanceBanner from "@/components/StudentPerformanceBanner";
+
 
 export default function StudentLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -24,6 +27,9 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen">
+      {/* Performance banner — shown when logged in and not on login page */}
+      {showNav && <StudentPerformanceBanner />}
+
       {/* Student Navbar */}
       {showNav && (
         <nav className="flex items-center justify-between px-8 py-5 border-b border-white/10 bg-[#09090b]/80 backdrop-blur-xl sticky top-0 z-40">
@@ -46,6 +52,18 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
 
           {/* Nav links */}
           <div className="flex items-center gap-2">
+            <Link
+              href="/student/dashboard"
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                pathname === "/student/dashboard"
+                  ? "bg-white/15 text-white border border-white/30"
+                  : "text-white/60 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <LayoutDashboard size={15} />
+              Dashboard
+            </Link>
+
             <Link
               href="/student/exam"
               className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
@@ -71,7 +89,7 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
             </Link>
           </div>
 
-          {/* Student info */}
+          {/* Student info + sign-out */}
           <div className="flex items-center gap-2.5">
             <div className="size-8 rounded-full bg-primary-200/20 flex items-center justify-center text-primary-200 font-bold text-sm">
               {studentName.charAt(0).toUpperCase()}
@@ -82,6 +100,7 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
                 <GraduationCap size={10} /> Student
               </span>
             </div>
+            <StudentSignOutButton />
           </div>
         </nav>
       )}

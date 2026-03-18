@@ -542,9 +542,18 @@ export async function savePracticeTechnicalResult({
   evaluation: any;
 }) {
   try {
+    let studentData: any = {};
     const studentDoc = await db.collection("students").doc(studentFirestoreId).get();
-    if (!studentDoc.exists) return { success: false, message: "Student not found" };
-    const studentData = studentDoc.data()!;
+    
+    if (studentDoc.exists) {
+      studentData = studentDoc.data()!;
+    } else {
+      const userDoc = await db.collection("users").doc(studentFirestoreId).get();
+      if (!userDoc.exists) {
+        return { success: false, message: "User/Student not found" };
+      }
+      studentData = userDoc.data()!;
+    }
 
     await db.collection("technicalSubmissions").add({
       examId: "practice",
@@ -570,3 +579,29 @@ export async function savePracticeTechnicalResult({
     return { success: false, message: error.message };
   }
 }
+
+// ── Student History ───────────────────────────────────────────────────────────
+
+export async function getStudentTechnicalHistory(studentFirestoreId: string) {
+  try {
+    const snapshot = await db
+      .collection("technicalSubmissions")
+      .where("studentFirestoreId", "==", studentFirestoreId)
+      .get();
+
+    const submissions = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as any[];
+
+    submissions.sort((a, b) =>
+      new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+    );
+
+    return submissions;
+  } catch (error: any) {
+    console.error("getStudentTechnicalHistory error:", error);
+    return [];
+  }
+}
+

@@ -6,10 +6,12 @@ import { ClipboardList, Code2, MessageSquare, GraduationCap, Coins } from "lucid
 
 const SecondaryNavbar = ({ 
   showCollegeExam = false,
-  tokens = 0 
+  tokens = 0,
+  isPlanActive = false
 }: { 
   showCollegeExam?: boolean,
-  tokens?: number
+  tokens?: number,
+  isPlanActive?: boolean
 }) => {
   const pathname = usePathname();
 
@@ -71,18 +73,32 @@ const SecondaryNavbar = ({
         })}
       </div>
 
-      <Link 
-        href="/pricing"
-        className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 hover:bg-white/10 transition-all group max-md:mt-4"
-      >
-        <div className="size-10 rounded-xl bg-primary-200/10 flex items-center justify-center group-hover:bg-primary-200/20 transition-colors">
-          <Coins size={20} className="text-primary-200" />
+      {showCollegeExam ? (
+        <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 max-md:mt-4 cursor-default">
+          <div className="size-10 rounded-xl bg-primary-200/10 flex items-center justify-center">
+            <Coins size={20} className="text-primary-200" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-white font-black text-sm tracking-tight">{tokens.toLocaleString()} Tokens</span>
+            <span className="text-primary-200 text-[10px] uppercase font-bold tracking-widest leading-tight">Remaining</span>
+          </div>
         </div>
-        <div className="flex flex-col">
-          <span className="text-white font-black text-sm tracking-tight">{tokens.toLocaleString()} Tokens</span>
-          <span className="text-primary-200 text-[10px] uppercase font-bold tracking-widest leading-tight">Upgrade Plan</span>
-        </div>
-      </Link>
+      ) : (
+        <Link 
+          href="/pricing"
+          className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 hover:bg-white/10 transition-all group max-md:mt-4"
+        >
+          <div className="size-10 rounded-xl bg-primary-200/10 flex items-center justify-center group-hover:bg-primary-200/20 transition-colors">
+            <Coins size={20} className="text-primary-200" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-white font-black text-sm tracking-tight">{tokens.toLocaleString()} Tokens</span>
+            <span className="text-primary-200 text-[10px] uppercase font-bold tracking-widest leading-tight">
+              {isPlanActive ? "Top-up Plan" : "Upgrade Plan"}
+            </span>
+          </div>
+        </Link>
+      )}
     </div>
   );
 };

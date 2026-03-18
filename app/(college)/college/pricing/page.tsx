@@ -4,8 +4,9 @@ import { db } from "@/firebase/admin";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import { activateCollegePlan } from "@/lib/actions/college.action";
 import { redirect } from "next/navigation";
-import { Check, Zap, Shield, GraduationCap } from "lucide-react";
+import { Check, Zap, Shield, GraduationCap, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface PageProps {
     searchParams: Promise<{ students?: string }>;
@@ -75,6 +76,12 @@ export default async function CollegePricingPage({ searchParams }: PageProps) {
 
     return (
         <div className="flex flex-col gap-10 pb-20 max-w-6xl mx-auto px-4">
+            <Link
+                href="/college/dashboard"
+                className="flex items-center gap-2 text-white/40 hover:text-white transition-colors w-fit text-sm font-medium pt-8"
+            >
+                <ArrowLeft size={16} /> Back to Dashboard
+            </Link>
             <div className="flex flex-col items-center text-center gap-4 py-10">
                 <h1 className="text-5xl font-black text-white tracking-tight">
                     Select Your <span className="text-primary-200">Growth Plan</span>

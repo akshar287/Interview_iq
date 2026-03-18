@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { 
   Code2, Brain, Play, Loader2, Clock, 
   Terminal as TerminalIcon, ShieldAlert, 
-  CheckCircle, ArrowRight, BookOpen, Zap
+  CheckCircle, ArrowRight, BookOpen, Zap, ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateTechnicalProblem, evaluateTechnicalSubmission, savePracticeTechnicalResult } from "@/lib/actions/technical.action";
@@ -101,7 +101,7 @@ export default function TechnicalRoundClient() {
       const totalTimeUsed = timeLimit - timeLeft;
 
       getCurrentUser().then(user => {
-        if (user && user.type === "student") {
+        if (user) {
           savePracticeTechnicalResult({
             studentFirestoreId: user.id,
             problem,

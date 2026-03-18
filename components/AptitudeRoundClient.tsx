@@ -5,7 +5,7 @@ import {
   ClipboardList, Brain, Clock, Loader2, 
   CheckCircle, ShieldAlert, ArrowRight, 
   Zap, BookOpen, Target, Layout, ListChecks,
-  TrendingUp, HelpCircle, XCircle
+  TrendingUp, HelpCircle, XCircle, ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateAptitudeExam, evaluateUserAptitude, savePracticeAptitudeResult, type Question } from "@/lib/actions/aptitude.action";
@@ -139,7 +139,7 @@ export default function AptitudeRoundClient() {
 
       // Find current user safely and save result
       getCurrentUser().then(user => {
-        if (user && user.type === "student") {
+        if (user) {
           savePracticeAptitudeResult({
             studentFirestoreId: user.id,
             questions,

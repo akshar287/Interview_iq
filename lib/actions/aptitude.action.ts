@@ -554,11 +554,18 @@ export async function savePracticeAptitudeResult({
   aiFeedback: string;
 }) {
   try {
+    let studentData: any = {};
     const studentDoc = await db.collection("students").doc(studentFirestoreId).get();
-    if (!studentDoc.exists) {
-      return { success: false, message: "Student not found" };
+    
+    if (studentDoc.exists) {
+      studentData = studentDoc.data()!;
+    } else {
+      const userDoc = await db.collection("users").doc(studentFirestoreId).get();
+      if (!userDoc.exists) {
+        return { success: false, message: "User/Student not found" };
+      }
+      studentData = userDoc.data()!;
     }
-    const studentData = studentDoc.data()!;
 
     await db.collection("aptitudeSubmissions").add({
       examId: "practice",
@@ -587,3 +594,29 @@ export async function savePracticeAptitudeResult({
     return { success: false, message: error.message };
   }
 }
+
+// ── Student History ───────────────────────────────────────────────────────────
+
+export async function getStudentAptitudeHistory(studentFirestoreId: string) {
+  try {
+    const snapshot = await db
+      .collection("aptitudeSubmissions")
+      .where("studentFirestoreId", "==", studentFirestoreId)
+      .get();
+
+    const submissions = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as any[];
+
+    submissions.sort((a, b) =>
+      new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+    );
+
+    return submissions;
+  } catch (error: any) {
+    console.error("getStudentAptitudeHistory error:", error);
+    return [];
+  }
+}
+
