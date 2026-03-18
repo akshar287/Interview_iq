@@ -349,12 +349,10 @@ export async function executeCode({
   version: string;
   content: string;
 }) {
-  const mirrors = [
     "https://emkc.org/api/v2/piston/execute",
     "https://piston.rs/api/v2/execute",
     "https://piston.engineering/api/v2/execute",
     "https://emacsx.piston.rs/api/v2/execute",
-    "https://piston-api.vercel.app/api/v2/execute", // A common community mirror
   ];
 
   let googleStatus = "Checking...";
