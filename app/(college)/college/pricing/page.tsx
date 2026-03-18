@@ -150,7 +150,7 @@ export default async function CollegePricingPage({ searchParams }: PageProps) {
             </div>
 
             <p className="text-center text-white/20 text-sm mt-12 flex items-center justify-center gap-2">
-                <Shield size={14} /> Secure billing provided by VoxIntel SaaS Logic. No hidden charges.
+                <Shield size={14} /> Secure billing provided by Careely SaaS Logic. No hidden charges.
             </p>
         </div>
     );

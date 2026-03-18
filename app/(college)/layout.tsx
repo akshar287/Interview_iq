@@ -64,10 +64,10 @@ const CollegeLayout = async ({ children }: { children: ReactNode }) => {
         <div className="flex items-center gap-6">
           <Link href="/college/dashboard" className="flex items-center gap-3">
             <div className="bg-primary-200 p-2 rounded-xl">
-              <Image src="/logo.svg" alt="VoxIntel Logo" width={24} height={20} className="invert brightness-0" />
+              <Image src="/careely-logo.png" alt="Careely Logo" width={24} height={24} className="rounded-sm" />
             </div>
             <div className="flex flex-col">
-              <h2 className="text-xl font-bold tracking-tight text-white leading-none">VoxIntel</h2>
+              <h2 className="text-xl font-bold tracking-tight text-white leading-none">Careely</h2>
               <span className="text-xs text-primary-200 font-medium tracking-wide uppercase">College Portal</span>
             </div>
           </Link>

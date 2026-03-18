@@ -279,7 +279,7 @@
     @apply flex flex-wrap gap-4 max-lg:flex-col w-full items-stretch;
   }
 
-  /* VoxIntel Premium Styles */
+  /* Careely Premium Styles */
   .glass-card {
     @apply bg-[#15171e]/60 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden;
   }

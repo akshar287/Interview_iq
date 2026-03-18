@@ -98,7 +98,7 @@ const Feedback = async ({ params }: RouteParams) => {
           <div className="p-2 bg-primary-200 rounded-xl shadow-[0_0_15px_rgba(202,197,254,0.4)]">
             <MessageSquare className="text-slate-950 size-6" />
           </div>
-          <span className="text-2xl font-black text-white tracking-tighter uppercase italic">VoxIntel</span>
+          <span className="text-2xl font-black text-white tracking-tighter uppercase italic">Careely</span>
         </div>
         <div className="flex items-center gap-2">
           {interview.recordingUrl && (

@@ -37,15 +37,15 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
           <Link href="/student/exam" className="flex items-center gap-3">
             <div className="bg-primary-200 p-2 rounded-xl">
               <Image
-                src="/logo.svg"
-                alt="VoxIntel"
+                src="/careely-logo.png"
+                alt="Careely"
                 width={20}
-                height={18}
-                className="invert brightness-0"
+                height={20}
+                className="rounded-sm"
               />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-white font-bold text-lg">VoxIntel</span>
+              <span className="text-white font-bold text-lg">Careely</span>
               <span className="text-primary-200 text-xs font-medium">Student Portal</span>
             </div>
           </Link>
