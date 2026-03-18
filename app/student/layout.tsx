@@ -45,7 +45,7 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
               />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="font-black text-xl italic uppercase tracking-tighter bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(90deg, #2dd4bf 0%, #f97316 100%)' }}>Careerly</span>
+              <span className="font-black text-xl italic uppercase tracking-tighter"><span style={{ color: '#2dd4bf' }}>Career</span><span style={{ color: '#f97316' }}>ly</span></span>
               <span className="text-primary-200 text-[10px] font-bold uppercase tracking-widest">Student Portal</span>
             </div>
           </Link>

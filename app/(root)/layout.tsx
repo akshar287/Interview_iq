@@ -57,7 +57,7 @@ const Layout = async ({ children }: { children: ReactNode }) => {
           <div className="bg-primary-200 p-1.5 rounded-xl">
             <Image src="/careerly-icon.png" alt="Careerly Logo" width={32} height={32} className="rounded-md" />
           </div>
-          <h2 className="text-2xl font-black tracking-tighter italic uppercase bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(90deg, #2dd4bf 0%, #f97316 100%)' }}>Careerly</h2>
+          <h2 className="text-2xl font-black tracking-tighter italic uppercase"><span style={{ color: '#2dd4bf' }}>Career</span><span style={{ color: '#f97316' }}>ly</span></h2>
         </Link>
 
 

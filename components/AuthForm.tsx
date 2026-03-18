@@ -212,7 +212,7 @@ const AuthForm = ({ type, module = "user" }: { type: "sign-in" | "sign-up"; modu
                 />
               </div>
               <div className="text-center">
-                <h1 className="text-4xl font-black tracking-tighter italic uppercase leading-none bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(90deg, #2dd4bf 0%, #f97316 100%)' }}>Careerly</h1>
+                <h1 className="text-4xl font-black tracking-tighter italic uppercase leading-none"><span style={{ color: '#2dd4bf' }}>Career</span><span style={{ color: '#f97316' }}>ly</span></h1>
                 <p className="text-white/40 text-xs font-bold tracking-[0.2em] uppercase mt-2">AI Placement Suite</p>
               </div>
             </div>
