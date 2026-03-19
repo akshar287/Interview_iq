@@ -15,6 +15,7 @@ import {
 } from "@/lib/actions/technical.action";
 import { getFeedbackByUserId, getInterviewsByUserId } from "@/lib/actions/general.action";
 import ClientInterviewCard from "@/components/ClientInterviewCard";
+import HowToUseSection from "@/components/HowToUseSection";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface StudentSession {

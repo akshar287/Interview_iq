@@ -18,7 +18,7 @@ const SecondaryNavbar = ({
   const navItems = [
     {
       name: "Interview Round",
-      href: "/",
+      href: "/interview-round",
       icon: MessageSquare,
     },
     {
@@ -44,8 +44,8 @@ const SecondaryNavbar = ({
   ];
 
   return (
-    <div className="flex flex-col md:flex-row items-center gap-4 mb-10">
-      <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md p-1.5 rounded-2xl w-fit border border-white/10 mx-auto md:mx-0">
+    <div className="flex flex-col md:flex-row items-center gap-4 mb-10 px-4 md:px-0">
+      <div className="hidden md:flex items-center gap-2 bg-white/5 backdrop-blur-md p-1.5 rounded-2xl w-fit border border-white/10 mx-auto md:mx-0">
         {navItems.map((item) => {
           const isActive =
             item.href === "/student/exam"
@@ -86,9 +86,9 @@ const SecondaryNavbar = ({
       ) : (
         <Link 
           href="/pricing"
-          className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 hover:bg-white/10 transition-all group max-md:mt-4"
+          className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 hover:bg-white/10 transition-all group w-full md:w-auto text-left"
         >
-          <div className="size-10 rounded-xl bg-primary-200/10 flex items-center justify-center group-hover:bg-primary-200/20 transition-colors">
+          <div className="size-10 rounded-xl bg-primary-200/10 flex items-center justify-center group-hover:bg-primary-200/20 transition-colors shrink-0">
             <Coins size={20} className="text-primary-200" />
           </div>
           <div className="flex flex-col">

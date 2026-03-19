@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import AmbientSound from "@/components/AmbientSound";
 import SecondaryNavbar from "@/components/SecondaryNavbar";
+import MobileMenu from "@/components/MobileMenu";
+import { MessageSquare, Code2, ClipboardList, GraduationCap } from "lucide-react";
 import UserPerformanceBanner from "@/components/UserPerformanceBanner";
 import StudentPerformanceBanner from "@/components/StudentPerformanceBanner";
 
@@ -40,16 +42,7 @@ const Layout = async ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="root-layout">
-      {/* Performance banner for authenticated regular users */}
-      {isUserAuthenticated && user?.type === "user" && (
-        <UserPerformanceBanner userId={user.id} />
-      )}
-      
-      {/* Performance banner for authenticated students */}
-      {!isUserAuthenticated && student && (
-        <StudentPerformanceBanner />
-      )}
-
+      {/* Removed Performance Banners per user request */}
       <nav className="flex items-center justify-between py-4 sm:py-6">
 
         {/* Brand */}
@@ -77,34 +70,20 @@ const Layout = async ({ children }: { children: ReactNode }) => {
           </div>
         )}
 
-        {/* Normal authenticated user sign-out */}
-        {isUserAuthenticated && (
-          <form action={handleSignOut}>
-            <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/5 gap-2 rounded-xl transition-all">
-              <LogOut size={18} />
-              <span className="font-medium hidden sm:inline">Sign Out</span>
-            </Button>
-          </form>
-        )}
-
-        {/* Student-only sign-out (no Firebase session) */}
-        {!isUserAuthenticated && student && (
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="size-8 rounded-full bg-primary-200/20 flex items-center justify-center text-primary-200 font-bold text-sm">
-                {student.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex flex-col leading-none">
-                <span className="text-white text-sm font-semibold">{student.name}</span>
-                <span className="text-white/40 text-xs">Student</span>
-              </div>
-            </div>
-            <form action={handleStudentSignOut}>
+        {/* authenticated sign-out & Mobile Menu */}
+        {(isUserAuthenticated || student) && (
+          <div className="flex items-center gap-2">
+            <form action={isUserAuthenticated ? handleSignOut : handleStudentSignOut} className="hidden md:block">
               <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/5 gap-2 rounded-xl transition-all">
                 <LogOut size={18} />
-                <span className="font-medium hidden sm:inline">Sign Out</span>
+                <span className="font-medium">Sign Out</span>
               </Button>
             </form>
+            <MobileMenu 
+              onSignOut={isUserAuthenticated ? handleSignOut : handleStudentSignOut}
+              userName={student?.name || user?.name}
+              isStudent={!!student}
+            />
           </div>
         )}
       </nav>

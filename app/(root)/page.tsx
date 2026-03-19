@@ -3,7 +3,6 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { db } from "@/firebase/admin";
 import InterviewCard from "@/components/InterviewCard";
-import NewInterviewButton from "@/components/NewInterviewButton";
 import {
   Cpu,
   BarChart3,
@@ -15,8 +14,11 @@ import {
   Code2,
   ChevronRight,
   Shield,
+  MessageSquare,
+  Target,
 } from "lucide-react";
 import HomeCarousel from "@/components/HomeCarousel";
+import HowToUseSection from "@/components/HowToUseSection";
 import { getCurrentUser, getStudentFromSession } from "@/lib/actions/auth.action";
 import {
   getInterviewById,
@@ -31,6 +33,7 @@ import { getStudentTechnicalHistory } from "@/lib/actions/technical.action";
 async function Home() {
   const user = await getCurrentUser();
   const student = !user ? await getStudentFromSession() : null;
+  const userPerf = user ? await getUserPerformanceSummary(user.id) : null;
 
   // Student logged in via Student ID — show welcome banner + performance summary + links to student portal
   if (!user && student) {
@@ -83,22 +86,9 @@ async function Home() {
 
         <HomeCarousel />
 
-
-
-        {/* Your Interviews */}
-        <section className="flex flex-col gap-6 mt-8">
-          <h2>Your Interviews</h2>
-          <div className="interviews-section">
-            <p>You haven&apos;t taken any AI interviews yet</p>
-          </div>
-        </section>
-
-        {/* Take Interviews */}
-        <section className="flex flex-col gap-6 mt-8">
-          <h2>Take Interviews</h2>
-          <div className="interviews-section">
-            <p>There are no interviews available</p>
-          </div>
+        {/* --- ADDED HOW TO USE SECTION HERE for visibility under tabs --- */}
+        <section className="max-w-6xl mx-auto mb-16">
+           <HowToUseSection />
         </section>
       </>
     );
@@ -298,150 +288,66 @@ async function Home() {
     getStudentTechnicalHistory(user?.id!),
   ]);
 
-  // Identify interviews the user practiced but didn't create
-  const practicedInterviewIds = [
-    ...new Set(userFeedback?.map((f: any) => f.interviewId)),
-  ];
-  const missingInterviewIds = (practicedInterviewIds as string[]).filter(
-    (id) => !createdInterviews?.some((i: any) => i.id === id)
-  );
-
-  const missingInterviews = await Promise.all(
-    missingInterviewIds.map((id) => getInterviewById(id))
-  );
-
-  // Combine and sort all user-relevant interviews
-  const userInterviews = [
-    ...(createdInterviews || []),
-    ...(missingInterviews.filter((i: any) => i !== null) as any[]),
-  ].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-
-  // Auto-generate assigned interview for interns if missing
-  if (user.isIntern && userInterviews.length === 0) {
-    const newInterview = {
-      userId: user.id,
-      role: user.role || "Software Engineer",
-      position: user.role || "Software Engineer",
-      experience: user.experience || "Entry",
-      techstack: [],
-      type: "Technical",
-      finalized: false,
-      createdAt: new Date().toISOString(),
-    };
-    const docRef = await db.collection("interviews").add(newInterview);
-    userInterviews.push({ id: docRef.id, ...newInterview } as any);
-  }
-
-  const internAssignedInterview = user.isIntern
-    ? userInterviews.find(i => !i.finalized)
-    : null;
-
-  const userPastInterviews = user.isIntern
-    ? userInterviews.filter(i => i.finalized)
-    : userInterviews;
-
-  const hasPastInterviews = userPastInterviews.length > 0;
-  const hasUpcomingInterviews = allInterview?.length! > 0;
-
   return (
     <>
-      <section className="glass-card flex flex-col md:flex-row items-center justify-between px-12 py-12 mb-12">
-        <div className="flex flex-col gap-6 max-w-lg text-left">
-          <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight">
-            AI Enabled Personal <br />
-            <span className="text-primary-200">Interview Analyser</span>
-          </h1>
-          <p className="text-lg text-white/50">
-            Practice real-world interview scenarios and receive instant,
-            data-driven feedback to accelerate your career growth.
+      <section className="glass-card px-8 lg:px-10 py-10 flex flex-col md:flex-row items-center justify-between gap-6 mb-8 mt-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <Users className="text-primary-200 size-8" />
+            <h1 className="text-3xl md:text-4xl font-bold text-white">
+              Welcome, <span className="text-primary-200">{user.name}</span>
+            </h1>
+          </div>
+          <p className="text-white/50 text-base md:text-lg max-w-lg">
+            Practice real-world interview scenarios and receive instant, data-driven feedback to accelerate your career growth.
           </p>
-
-          {!user.isIntern && (
-            <NewInterviewButton userId={user?.id!} userName={user?.name!} />
-          )}
+          <p className="text-white/30 text-sm hidden sm:block">{user.email}</p>
         </div>
 
-        <div className="relative mt-8 md:mt-0">
-          <div className="absolute inset-0 bg-primary-200/20 blur-[80px] rounded-full animate-pulse" />
-          <Image
-            src="/robot.png"
-            alt="robo-dude"
-            width={350}
-            height={350}
-            className="relative z-10 drop-shadow-2xl"
-          />
+        <div className="flex justify-end items-center mt-6 md:mt-0">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary-200/10 hover:bg-primary-200/20 text-primary-200 font-semibold border border-primary-200/20 transition-all"
+          >
+            <BarChart3 size={18} /> Dashboard
+          </Link>
         </div>
       </section>
 
-
-      <section className="flex flex-col gap-6 mt-8">
-        <h2>{user.isIntern ? "Your History" : "Your Interviews"}</h2>
-
-        <div className="interviews-section">
-          {hasPastInterviews ? (
-            userPastInterviews?.map((interview) => (
-              <InterviewCard
-                key={interview.id}
-                userId={user?.id}
-                interviewId={interview.id}
-                role={interview.role}
-                type={interview.type}
-                techstack={interview.techstack}
-                createdAt={interview.createdAt}
-              />
-            ))
-          ) : (
-            <p>You haven&apos;t taken any interviews yet</p>
-          )}
+      {/* Grid Overview (Performance Dashboard) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        <div className="glass-card p-5 border border-white/5 rounded-2xl flex flex-col gap-3">
+          <div className="p-2.5 bg-blue-500/10 rounded-xl w-fit"><BookOpen className="text-blue-400 size-5" /></div>
+          <div>
+            <p className="text-white/50 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">Aptitude Avg</p>
+            <p className="text-xl sm:text-2xl font-black text-white">{userPerf?.aptAvg ?? "—"}%</p>
+          </div>
         </div>
-      </section>
-
-      <section className="flex flex-col gap-6 mt-8">
-        <h2>{user?.isIntern ? "Your Assigned Interview" : "Take Interviews"}</h2>
-
-        <div className="interviews-section">
-          {user?.isIntern ? (
-            internAssignedInterview ? (
-              <InterviewCard
-                key={internAssignedInterview.id}
-                userId={user?.id}
-                interviewId={internAssignedInterview.id}
-                role={internAssignedInterview.role}
-                type={internAssignedInterview.type}
-                techstack={internAssignedInterview.techstack}
-                createdAt={internAssignedInterview.createdAt}
-              />
-            ) : hasPastInterviews ? (
-              <div className="flex flex-col items-center justify-center py-10 glass-card w-full border-teal-500/30">
-                <Link
-                  href="/student/dashboard"
-                  className="flex flex-col items-center justify-center gap-2 w-full text-primary-200 font-bold hover:bg-primary-200/10 transition-all border-primary-200/30"
-                >
-                  <p className="text-xl font-bold text-teal-400 mb-2">Interview Completed!</p>
-                  <p className="text-white/60">Your company has received your feedback. Great job!</p>
-                </Link>
-              </div>
-            ) : (
-              <p>No interview assigned for your role yet.</p>
-            )
-          ) : hasUpcomingInterviews ? (
-            allInterview?.map((interview: any) => (
-              <InterviewCard
-                key={interview.id}
-                userId={user?.id}
-                interviewId={interview.id}
-                role={interview.role}
-                type={interview.type}
-                techstack={interview.techstack}
-                createdAt={interview.createdAt}
-              />
-            ))
-          ) : (
-            <p>There are no interviews available</p>
-          )}
+        <div className="glass-card p-5 border border-white/5 rounded-2xl flex flex-col gap-3">
+          <div className="p-2.5 bg-purple-500/10 rounded-xl w-fit"><Code2 className="text-purple-400 size-5" /></div>
+          <div>
+            <p className="text-white/50 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">Tech Avg</p>
+            <p className="text-xl sm:text-2xl font-black text-white">{userPerf?.techAvg ?? "—"}%</p>
+          </div>
         </div>
+        <div className="glass-card p-5 border border-white/5 rounded-2xl flex flex-col gap-3">
+          <div className="p-2.5 bg-primary-200/10 rounded-xl w-fit"><MessageSquare className="text-primary-200 size-5" /></div>
+          <div>
+            <p className="text-white/50 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">Interview Avg</p>
+            <p className="text-xl sm:text-2xl font-black text-white">{userPerf?.interviewAvg ?? "—"}%</p>
+          </div>
+        </div>
+        <div className="glass-card p-5 border border-white/5 rounded-2xl flex flex-col gap-3">
+          <div className="p-2.5 bg-green-500/10 rounded-xl w-fit"><Target className="text-green-400 size-5" /></div>
+          <div>
+            <p className="text-white/50 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">Total Rounds</p>
+            <p className="text-xl sm:text-2xl font-black text-white">{(userPerf?.aptCount || 0) + (userPerf?.techCount || 0) + (userPerf?.interviewCount || 0)}</p>
+          </div>
+        </div>
+      </div>
+
+      <section className="mb-10 max-w-6xl mx-auto">
+        <HowToUseSection />
       </section>
 
       {/* Recent Practice Rounds for Regular Users */}

@@ -13,6 +13,7 @@ import { getStudentTechnicalHistory } from "@/lib/actions/technical.action";
 import { getFeedbackByUserId, getInterviewsByUserId } from "@/lib/actions/general.action";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import ClientInterviewCard from "@/components/ClientInterviewCard";
+import HowToUseSection from "@/components/HowToUseSection";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface Interview {
@@ -314,6 +315,9 @@ export default function UserDashboardPage() {
             </div>
           ))}
         </div>
+
+        {/* Roadmap Section */}
+        <HowToUseSection />
 
         {/* Tabs */}
         <div className="flex gap-3 flex-wrap">

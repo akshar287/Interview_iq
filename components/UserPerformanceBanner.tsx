@@ -64,12 +64,6 @@ export default async function UserPerformanceBanner({ userId }: { userId: string
               No performance data yet
             </div>
           )}
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white/40 hover:text-white hover:bg-white/5 transition-all border border-white/10"
-          >
-            <BarChart3 size={12} /> Dashboard
-          </Link>
         </div>
       </div>
     </div>

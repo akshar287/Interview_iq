@@ -1,17 +1,21 @@
 "use client";
 
+import Image from "next/image";
+
 import { useState, useRef, useEffect, useCallback } from "react";
 import { 
   Code2, Brain, Play, Loader2, Clock, 
-  Terminal as TerminalIcon, ShieldAlert, 
-  CheckCircle, ArrowRight, BookOpen, Zap, ArrowLeft
+  Terminal, ShieldAlert, CheckCircle, 
+  ArrowRight, BookOpen, Zap, ArrowLeft,
+  BarChart3, TrendingUp, Target, CalendarDays, 
+  CheckCircle2 as CheckCircle2Icon 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateTechnicalProblem, evaluateTechnicalSubmission, savePracticeTechnicalResult } from "@/lib/actions/technical.action";
 import CodeEditor from "@/components/CodeEditor";
 import { toast } from "sonner";
-import { BarChart3, TrendingUp, Target, CalendarDays, BookOpen as BookOpenIcon, CheckCircle2 as CheckCircle2Icon } from "lucide-react";
 import { getCurrentUser } from "@/lib/actions/auth.action";
+import HowToUseSection from "./HowToUseSection";
 import { deductTokens } from "@/lib/actions/billing.action";
 import { useRouter } from "next/navigation";
 
@@ -146,15 +150,40 @@ export default function TechnicalRoundClient() {
 
   if (step === "difficulty") {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-4">
-        <div className="max-w-2xl w-full">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-bold mb-4">
-              <Zap size={12} className="fill-purple-400" />
-              AI Technical Assessment
+      <div className="flex flex-col items-center justify-center py-10 px-4 w-full">
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="bg-[#1a1c23] rounded-3xl overflow-hidden relative mb-12 border border-purple-500/10 shadow-2xl">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 w-full max-w-6xl mx-auto px-6">
+              <div className="flex flex-col gap-6 text-center md:text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] font-black uppercase tracking-widest w-fit mx-auto md:mx-0">
+                  <Zap size={12} className="fill-purple-400" />
+                  AI Technical Assessment
+                </div>
+                <h1 className="text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
+                  AI Enabled Technical <br />
+                  <span className="text-purple-400">Coding Editor</span>
+                </h1>
+                <p className="text-white/60 text-base md:text-lg">
+                  Select a difficulty level to generate a custom technical programming problem for your interview practice.
+                </p>
+              </div>
+              <div className="flex relative w-[240px] h-[200px] md:w-[280px] md:h-[220px] lg:w-[320px] lg:h-[260px] items-center justify-center">
+                <div className="relative size-full flex items-center justify-center">
+                  {/* Decorative background pulse */}
+                  <div className="absolute inset-0 bg-purple-500/20 blur-[80px] rounded-full animate-pulse" />
+                  
+                  {/* Styled Icon Container */}
+                  <div className="relative size-32 md:size-40 lg:size-48 bg-gradient-to-br from-[#1a1c23] to-[#09090b] rounded-[32px] md:rounded-[40px] border border-purple-500/20 shadow-2xl flex items-center justify-center transform group-hover:scale-105 transition-transform duration-500">
+                    <Terminal className="text-purple-400 size-16 md:size-20 lg:size-24 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
+                    
+                    {/* Floating elements */}
+                    <div className="absolute -top-3 -right-3 md:-top-4 md:-right-4 p-2 md:p-3 bg-[#1a1c23] border border-purple-500/20 rounded-xl md:rounded-2xl shadow-xl animate-bounce">
+                      <Code2 className="text-purple-400 size-5 md:size-6" />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h1 className="text-4xl font-black text-white mb-4">Choose Your Difficulty</h1>
-            <p className="text-white/50">Select a level to generate a custom technical problem for your interview practice.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { 
   ClipboardList, Brain, Clock, Loader2, 
@@ -12,6 +13,7 @@ import { generateAptitudeExam, evaluateUserAptitude, savePracticeAptitudeResult,
 import { toast } from "sonner";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import { deductTokens } from "@/lib/actions/billing.action";
+import HowToUseSection from "./HowToUseSection";
 import { useRouter } from "next/navigation";
 
 type AptitudeStep = "setup" | "generating" | "exam" | "results";
@@ -159,18 +161,44 @@ export default function AptitudeRoundClient() {
 
   if (step === "setup") {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-4">
-        <div className="max-w-2xl w-full">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold mb-4 uppercase tracking-widest">
-              <Brain size={12} className="fill-blue-400" />
-              AI Aptitude Module
+      <div className="flex flex-col items-center justify-center py-10 px-4 w-full">
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="bg-[#1a1c23] rounded-3xl overflow-hidden relative mb-12 border border-blue-500/10 shadow-2xl">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 w-full max-w-6xl mx-auto px-6">
+              <div className="flex flex-col gap-6 text-center md:text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest w-fit mx-auto md:mx-0">
+                  <Brain size={12} className="fill-blue-400" />
+                  AI Aptitude Module
+                </div>
+                <h1 className="text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
+                  AI Enabled General <br />
+                  <span className="text-blue-400">Aptitude Test</span>
+                </h1>
+                <p className="text-white/60 text-base md:text-lg">
+                  Test your quantitative, logical, and verbal reasoning skills with our dynamic, AI-generated aptitude assessments.
+                </p>
+              </div>
+              <div className="flex relative w-[240px] h-[200px] md:w-[280px] md:h-[220px] lg:w-[320px] lg:h-[260px] items-center justify-center">
+                <div className="relative size-full flex items-center justify-center">
+                  {/* Decorative background pulse */}
+                  <div className="absolute inset-0 bg-blue-500/20 blur-[80px] rounded-full animate-pulse" />
+                  
+                  {/* Styled Icon Container */}
+                  <div className="relative size-32 md:size-40 lg:size-48 bg-gradient-to-br from-[#1a1c23] to-[#09090b] rounded-[32px] md:rounded-[40px] border border-blue-500/20 shadow-2xl flex items-center justify-center transform group-hover:scale-105 transition-transform duration-500">
+                    <Brain className="text-blue-400 size-16 md:size-20 lg:size-24 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+                    
+                    {/* Floating elements */}
+                    <div className="absolute -top-3 -right-3 md:-top-4 md:-right-4 p-2 md:p-3 bg-[#1a1c23] border border-blue-500/20 rounded-xl md:rounded-2xl shadow-xl animate-bounce">
+                      <Target className="text-blue-400 size-5 md:size-6" />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h1 className="text-4xl font-black text-white mb-4">Aptitude Practice Round</h1>
-            <p className="text-white/50">Customized, AI-generated assessments to sharpen your logical and analytical skills.</p>
           </div>
 
-          <div className="glass-card p-10 border-white/5 bg-[#09090b]/40 backdrop-blur-xl">
+          <div className="max-w-2xl mx-auto w-full">
+            <div className="glass-card p-10 border-white/5 bg-[#09090b]/40 backdrop-blur-xl">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                 <div className="space-y-4">
                    <div className="flex items-center justify-between">
@@ -233,6 +261,7 @@ export default function AptitudeRoundClient() {
                 <Zap className="fill-white" />
                 Generate Aptitude Exam
              </Button>
+            </div>
           </div>
         </div>
       </div>

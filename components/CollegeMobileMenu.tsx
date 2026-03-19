@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Users, BookOpen, Code2, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { signOut } from "@/lib/actions/auth.action";
 
 interface Props {
   hasPlan: boolean;
@@ -58,7 +59,7 @@ export default function CollegeMobileMenu({ hasPlan, collegeName }: Props) {
           ))}
 
           <div className="mt-auto pt-4 border-t border-white/10">
-            <form action="/api/auth/sign-out" method="POST">
+            <form action={signOut}>
               <Button variant="ghost" className="w-full text-white/70 hover:text-white gap-2 justify-start">
                 <LogOut size={16} /> Sign Out
               </Button>
