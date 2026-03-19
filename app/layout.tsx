@@ -12,6 +12,16 @@ const monaSans = Mona_Sans({
 export const metadata: Metadata = {
   title: "Careerly",
   description: "AI-powered placement preparation suite — Aptitude, Technical & AI Mock Interviews",
+  manifest: "/manifest.json",
+  themeColor: "#2dd4bf",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Careerly",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
     icon: "/careerly-icon.png",
     shortcut: "/careerly-icon.png",
@@ -19,7 +29,16 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport = {
+  themeColor: "#2dd4bf",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 import GlobalBackButton from "@/components/GlobalBackButton";
+import PWARegistration from "@/components/PWARegistration";
 
 export default function RootLayout({
   children,
@@ -29,6 +48,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${monaSans.className} antialiased pattern`}>
+        <PWARegistration />
         {children}
         <GlobalBackButton />
         <Toaster />
