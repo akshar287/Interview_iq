@@ -46,7 +46,7 @@ export default function AptitudeSetupClient({
   const [step, setStep] = useState<"config" | "questions" | "done">(
     existingExam ? "done" : "config"
   );
-  const [numQuestions, setNumQuestions] = useState<number>(10);
+  const [numQuestions, setNumQuestions] = useState<number>(50);
   const [duration, setDuration] = useState<number>(30);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
@@ -360,11 +360,10 @@ export default function AptitudeSetupClient({
           <h2 className="text-xl font-bold text-white">Configure Exam Paper</h2>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-white/70">Number of Questions</label>
-            <input
-              type="number" min={1} max={100} value={numQuestions}
-              onChange={(e) => setNumQuestions(Number(e.target.value))}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-lg font-bold focus:outline-none focus:border-blue-400/50 transition-all"
-            />
+            <div className="w-full bg-white/5 border border-blue-500/30 rounded-xl px-4 py-3 text-white text-lg font-bold flex items-center justify-between">
+              <span>Standard Exam Size</span>
+              <span className="text-blue-400">50 Questions</span>
+            </div>
             <p className="text-white/30 text-xs">How many questions should appear in the exam?</p>
           </div>
           <div className="flex flex-col gap-2">

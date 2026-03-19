@@ -69,7 +69,7 @@ export default function MobileMenu({ onSignOut, userName, isStudent, isGuest }: 
       </button>
 
       {open && (
-        <div className="fixed inset-0 top-[65px] sm:top-[73px] z-[100] bg-[#09090b]/98 backdrop-blur-2xl flex flex-col p-6 animate-in slide-in-from-top-4 fade-in duration-300 border-t border-white/5">
+        <div className="fixed inset-0 top-[65px] sm:top-[73px] z-[100] bg-[#09090b]/98 backdrop-blur-2xl flex flex-col p-6 animate-in slide-in-from-top-4 fade-in duration-300 border-t border-white/5 overflow-y-auto pb-12">
           {/* Background Glows */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 opacity-30 pointer-events-none">
             <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[40%] bg-primary-200/20 blur-[100px] rounded-full" />

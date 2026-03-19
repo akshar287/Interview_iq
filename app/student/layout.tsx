@@ -96,7 +96,7 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
 
       {/* Mobile Menu Drawer */}
       {showNav && menuOpen && (
-        <div className="md:hidden fixed inset-0 top-[65px] z-30 bg-[#09090b]/97 backdrop-blur-xl border-t border-white/10 flex flex-col p-6 gap-3">
+        <div className="md:hidden fixed inset-0 top-[65px] z-30 bg-[#09090b]/97 backdrop-blur-xl border-t border-white/10 flex flex-col p-6 gap-3 overflow-y-auto pb-12">
           {/* Student info */}
           <div className="flex items-center gap-3 pb-4 border-b border-white/10">
             <div className="size-10 rounded-full bg-primary-200/20 flex items-center justify-center text-primary-200 font-bold text-lg">
@@ -122,8 +122,10 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
             </Link>
           ))}
 
-          <div className="mt-auto pt-4 border-t border-white/10">
-            <StudentSignOutButton />
+          <div className="mt-auto pt-6 border-t border-white/10 w-full">
+            <div className="bg-white/5 rounded-2xl p-2">
+              <StudentSignOutButton isMobile />
+            </div>
           </div>
         </div>
       )}

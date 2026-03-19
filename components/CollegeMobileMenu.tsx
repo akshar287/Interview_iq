@@ -35,7 +35,7 @@ export default function CollegeMobileMenu({ hasPlan, collegeName }: Props) {
       </button>
 
       {open && (
-        <div className="md:hidden fixed inset-0 top-[73px] z-30 bg-[#09090b]/97 backdrop-blur-xl border-t border-white/10 flex flex-col p-6 gap-3">
+        <div className="md:hidden fixed inset-0 top-[73px] z-30 bg-[#09090b]/97 backdrop-blur-xl border-t border-white/10 flex flex-col p-6 gap-3 overflow-y-auto pb-12">
           {collegeName && (
             <div className="pb-4 border-b border-white/10">
               <p className="text-white/40 text-xs uppercase tracking-widest font-bold">College Portal</p>

@@ -22,7 +22,7 @@ export default function AptitudeRoundClient() {
   const router = useRouter();
   const [step, setStep] = useState<AptitudeStep>("setup");
   const [selectedCategories, setSelectedCategories] = useState<string[]>(["Numerics", "Logical Reasoning", "Verbal"]);
-  const [numQuestions, setNumQuestions] = useState(10);
+  const [numQuestions, setNumQuestions] = useState(50);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -236,21 +236,12 @@ export default function AptitudeRoundClient() {
 
                 <div className="space-y-4">
                    <label className="text-xs font-black uppercase tracking-[0.2em] text-white/30">Questions</label>
-                   <div className="grid grid-cols-3 gap-2">
-                      {[10, 20, 30].map(num => (
-                         <button
-                            key={num}
-                            onClick={() => setNumQuestions(num)}
-                            className={`px-4 py-3 rounded-xl text-sm font-bold border transition-all ${
-                               numQuestions === num 
-                               ? "bg-blue-500 border-blue-400 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)]" 
-                               : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
-                            }`}
-                         >
-                            {num}
-                         </button>
-                      ))}
-                   </div>
+                    <div className="grid grid-cols-1">
+                       <div className="px-5 py-3 rounded-xl text-sm font-bold border border-blue-400 bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] flex items-center justify-between">
+                          <span>Standard Exam Size</span>
+                          <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-black uppercase">50 Questions</span>
+                       </div>
+                    </div>
                 </div>
              </div>
 

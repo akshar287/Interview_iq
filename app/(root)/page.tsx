@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import HomeCarousel from "@/components/HomeCarousel";
 import HowToUseSection from "@/components/HowToUseSection";
+import NewInterviewButton from "@/components/NewInterviewButton";
 import { getCurrentUser, getStudentFromSession } from "@/lib/actions/auth.action";
 import {
   getInterviewById,
@@ -68,10 +69,9 @@ async function Home() {
             </p>
             {/* Students can also create practice interviews */}
             <div className="flex items-center gap-4 mt-2">
-                <NewInterviewButton userId={student.firestoreId} userName={student.name} />
                 <Link 
                     href="/student/dashboard" 
-                    className="h-12 px-6 rounded-2xl border border-white/10 hover:bg-white/5 text-white/70 hover:text-white transition-all flex items-center justify-center font-bold"
+                    className="h-12 px-8 rounded-2xl bg-primary-200/10 border border-primary-200/20 text-primary-200 hover:bg-primary-200 hover:text-white transition-all flex items-center justify-center font-bold"
                 >
                     View History
                 </Link>
