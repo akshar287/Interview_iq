@@ -15,6 +15,7 @@ import { getCurrentUser } from "@/lib/actions/auth.action";
 import { deductTokens } from "@/lib/actions/billing.action";
 import HowToUseSection from "./HowToUseSection";
 import { useRouter } from "next/navigation";
+import ExamSecurity from "./ExamSecurity";
 
 type AptitudeStep = "setup" | "generating" | "exam" | "results";
 
@@ -36,6 +37,13 @@ export default function AptitudeRoundClient() {
   const startTimeRef = useRef<number>(0);
 
   const startExam = async () => {
+    // Immediate fullscreen request to capture user gesture context
+    try {
+      if (typeof document !== "undefined" && !document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch {}
+
     if (selectedCategories.length === 0) {
       toast.error("Please select at least one category.");
       return;
@@ -70,6 +78,7 @@ export default function AptitudeRoundClient() {
     if (res.success && res.questions) {
       setQuestions(res.questions);
       setTimeLeft(numQuestions * 60); // 1 minute per question
+
       setStep("exam");
       startTimeRef.current = Date.now();
     } else {
@@ -283,6 +292,11 @@ export default function AptitudeRoundClient() {
 
     return (
       <div className="fixed inset-0 z-[100] bg-[#050505] flex flex-col pt-10">
+        <ExamSecurity 
+          isActive={step === "exam"} 
+          onAutoSubmit={() => submitExam(true)} 
+          title="Aptitude Practice"
+        />
         <div className="max-w-5xl mx-auto w-full px-6 flex flex-col h-full pb-10">
           {/* Top Bar */}
           <div className="flex items-center justify-between mb-10">

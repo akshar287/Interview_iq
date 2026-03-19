@@ -3,12 +3,11 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-  Clock, CheckCircle, AlertTriangle, Loader2, GraduationCap,
-  Brain, TrendingUp, Target, Download, Lightbulb, BookOpen,
-  XCircle, Timer, Star, BarChart3, CalendarDays, ShieldAlert,
-  ClipboardList, Play, Users, FileText,
-} from "lucide-react";
+import InstallButton from "@/components/InstallButton";
+import { MessageSquare, Code2, ClipboardList, GraduationCap, LogOut } from "lucide-react";
+import UserPerformanceBanner from "@/components/UserPerformanceBanner";
+import StudentPerformanceBanner from "@/components/StudentPerformanceBanner";
+import ExamSecurity from "@/components/ExamSecurity";
 import { Button } from "@/components/ui/button";
 import {
   getAptitudeExamByCollege,
@@ -43,25 +42,7 @@ interface AnalysisData {
 
 const OPTIONS = ["A", "B", "C", "D"] as const;
 
-function SecurityWarning({ onDismiss }: { onDismiss: () => void }) {
-  return (
-    <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm flex items-center justify-center px-4">
-      <div className="max-w-sm w-full glass-card p-8 border-red-500/50 flex flex-col items-center gap-5 text-center">
-        <div className="size-16 rounded-2xl bg-red-500/10 flex items-center justify-center">
-          <ShieldAlert className="text-red-400 size-8" />
-        </div>
-        <h2 className="text-xl font-black text-white">⚠️ Tab Switch Detected!</h2>
-        <p className="text-white/70 text-sm leading-relaxed">
-          Switching tabs during the exam is not allowed. This violation has been recorded.
-          A <strong className="text-red-400">second violation</strong> will automatically submit your exam.
-        </p>
-        <Button onClick={onDismiss} className="w-full h-11 bg-red-500 hover:bg-red-600 font-bold rounded-xl">
-          I Understand — Return to Exam
-        </Button>
-      </div>
-    </div>
-  );
-}
+// SecurityWarning removed in favor of unified ExamSecurity component
 
 function parseAnalysis(raw: string): AnalysisData | null {
   try {
@@ -238,6 +219,13 @@ export default function StudentExamPage() {
 
   // ── Apply for exam ──
   const handleApply = async () => {
+    // Immediate fullscreen request to capture user gesture context
+    try {
+      if (typeof document !== "undefined" && !document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch {}
+
     if (!student || !activeSession || !exam) return;
     setApplyLoading(true);
     const result = await applyForExam({
@@ -259,36 +247,12 @@ export default function StudentExamPage() {
     timeLeftRef.current = totalSecs;
     totalDurationRef.current = totalSecs;
     setExamStartTime(Date.now());
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    }
     statusRef.current = "exam";
     setStatus("exam");
   };
 
   // ── Security ──
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden" && statusRef.current === "exam") {
-        doSubmitRef.current?.(true);
-      }
-    };
-    const blockKey = (e: KeyboardEvent) => {
-      if (statusRef.current !== "exam") return;
-      if ((e.ctrlKey && ["c", "a", "s", "p", "u"].includes(e.key.toLowerCase())) || e.key === "PrintScreen" || e.key === "F12") {
-        e.preventDefault(); e.stopPropagation();
-      }
-    };
-    const blockContext = (e: MouseEvent) => { if (statusRef.current === "exam") e.preventDefault(); };
-    document.addEventListener("visibilitychange", handleVisibility);
-    document.addEventListener("keydown", blockKey, true);
-    document.addEventListener("contextmenu", blockContext);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-      document.removeEventListener("keydown", blockKey, true);
-      document.removeEventListener("contextmenu", blockContext);
-    };
-  }, []);
+  // Security handled by ExamSecurity component
 
   const handleAnswerSelect = (questionIdx: number, opt: string) => {
     const elapsed = Math.round((Date.now() - examStartTime) / 1000);
@@ -617,8 +581,12 @@ export default function StudentExamPage() {
 
   return (
     <div className="fixed inset-0 z-50 pattern pb-32 select-none overflow-y-auto bg-[#050505]" onCopy={(e) => e.preventDefault()} onCut={(e) => e.preventDefault()}>
-      {showSecurityWarning && <SecurityWarning onDismiss={() => setShowSecurityWarning(false)} />}
-      {violationCountRef.current > 0 && !showSecurityWarning && (
+      <ExamSecurity 
+        isActive={status === "exam"} 
+        onAutoSubmit={() => doSubmit(true)} 
+        title="Official Aptitude Exam"
+      />
+      {violationCountRef.current > 0 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[99] px-4 py-1.5 rounded-full bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold flex items-center gap-2">
           <ShieldAlert size={12} />1 violation recorded — next tab switch will auto-submit
         </div>

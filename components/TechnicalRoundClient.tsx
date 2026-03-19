@@ -18,6 +18,7 @@ import { getCurrentUser } from "@/lib/actions/auth.action";
 import HowToUseSection from "./HowToUseSection";
 import { deductTokens } from "@/lib/actions/billing.action";
 import { useRouter } from "next/navigation";
+import ExamSecurity from "./ExamSecurity";
 
 interface Problem {
   title: string;
@@ -70,6 +71,14 @@ export default function TechnicalRoundClient() {
       // Set time based on difficulty
       const mins = diff === "Easy" ? 20 : diff === "Medium" ? 40 : 60;
       setTimeLeft(mins * 60);
+
+      // Manual fullscreen focus to avoid browser block
+      try {
+        if (typeof document !== "undefined" && !document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } catch {}
+
       setStep("coding");
     } else {
       toast.error("Failed to generate problem. Please try again.");
@@ -237,6 +246,11 @@ export default function TechnicalRoundClient() {
   if (step === "coding" && problem) {
     return (
       <div className="fixed inset-0 z-[100] bg-[#050505] flex flex-col">
+          <ExamSecurity 
+            isActive={step === "coding"} 
+            onAutoSubmit={() => handleSubmit(true)} 
+            title="Technical Practice"
+          />
         {/* HEADER */}
         <div className="h-16 bg-[#09090b] border-b border-white/10 flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-3">

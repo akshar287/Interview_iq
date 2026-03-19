@@ -16,6 +16,7 @@ import {
   type TechQuestion
 } from "@/lib/actions/technical.action";
 import CodeEditor from "@/components/CodeEditor";
+import ExamSecurity from "@/components/ExamSecurity";
 
 interface StudentSession {
   firestoreId: string; studentId: string; name: string;
@@ -96,6 +97,13 @@ export default function StudentTechnicalPage() {
   useEffect(() => { statusRef.current = status; }, [status]);
 
   const handleApply = async () => {
+    // Immediate fullscreen request to capture user gesture context
+    try {
+      if (typeof document !== "undefined" && !document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch {}
+
     if (!student || !activeSession || !exam) return;
     setApplyLoading(true);
     const res = await applyForTechExam({
@@ -123,9 +131,6 @@ export default function StudentTechnicalPage() {
     });
     setCodes(initCodes);
 
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    }
     statusRef.current = "exam";
     setStatus("exam");
   };
@@ -329,7 +334,12 @@ export default function StudentTechnicalPage() {
   const currentLang = codes[activeQuestionIdx]?.language || langOpts[0];
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#050505]">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#050505] select-none">
+      <ExamSecurity 
+        isActive={status === "exam"} 
+        onAutoSubmit={() => doSubmit(true)} 
+        title="Official Technical Exam"
+      />
       {/* HEADER */}
       <div className="h-14 bg-[#09090b] border-b border-white/10 flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-3">
