@@ -4,7 +4,12 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import InstallButton from "@/components/InstallButton";
-import { MessageSquare, Code2, ClipboardList, GraduationCap, LogOut } from "lucide-react";
+import { 
+  MessageSquare, Code2, ClipboardList, GraduationCap, LogOut, 
+  Download, Loader2, Clock, FileText, Timer, Play, Brain, 
+  CheckCircle, AlertTriangle, Star, BarChart3, XCircle, 
+  Target, Lightbulb, TrendingUp, CalendarDays, ShieldAlert 
+} from "lucide-react";
 import UserPerformanceBanner from "@/components/UserPerformanceBanner";
 import StudentPerformanceBanner from "@/components/StudentPerformanceBanner";
 import ExamSecurity from "@/components/ExamSecurity";
@@ -591,18 +596,18 @@ export default function StudentExamPage() {
           <ShieldAlert size={12} />1 violation recorded — next tab switch will auto-submit
         </div>
       )}
-      <div className="sticky top-0 z-50 bg-[#09090b]/90 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex items-center justify-between">
-        <div>
-          <p className="text-white font-bold text-lg">{student?.name}</p>
-          <p className="text-white/40 text-xs">{student?.branch} · Year {student?.year} · {student?.studentId}</p>
+      <div className="sticky top-0 z-50 bg-[#09090b]/90 backdrop-blur-xl border-b border-white/10 px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col items-center md:items-start w-full md:w-auto">
+          <p className="text-white font-bold text-base md:text-lg">{student?.name}</p>
+          <p className="text-white/40 text-[10px] md:text-xs">{student?.branch} · Year {student?.year} · {student?.studentId}</p>
         </div>
-        <div className="flex flex-col items-center">
-          <p className={`text-3xl font-black font-mono ${timerColor}`}>{formatTime(timeLeft)}</p>
-          <p className="text-white/30 text-xs">Time Remaining</p>
+        <div className="flex flex-col items-center shrink-0">
+          <p className={`text-2xl md:text-3xl font-black font-mono leading-none ${timerColor}`}>{formatTime(timeLeft)}</p>
+          <p className="text-white/30 text-[10px] md:text-xs mt-1">Time Remaining</p>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <p className="text-white/50 text-sm">{answered}/{total} answered</p>
-          <div className="w-32 h-1.5 bg-white/10 rounded-full overflow-hidden">
+        <div className="flex flex-col items-center md:items-end gap-1 w-full md:w-auto">
+          <p className="text-white/50 text-xs md:text-sm">{answered}/{total} answered</p>
+          <div className="w-full md:w-32 h-1.5 bg-white/10 rounded-full overflow-hidden">
             <div className="h-full bg-primary-200 rounded-full transition-all" style={{ width: `${(answered / total) * 100}%` }} />
           </div>
         </div>
@@ -615,18 +620,18 @@ export default function StudentExamPage() {
         </p>
 
         {exam.questions.map((q, idx) => (
-          <div key={idx} className={`glass-card p-6 border transition-all ${answers[idx] ? "border-primary-200/30" : "border-white/5"}`}>
-            <p className="text-white/50 text-xs font-bold uppercase tracking-widest mb-3">Q{idx + 1}</p>
-            <p className="text-white font-medium mb-5 leading-relaxed">{q.question}</p>
-            <div className="flex flex-col gap-3">
+          <div key={idx} className={`glass-card p-4 md:p-6 border transition-all ${answers[idx] ? "border-primary-200/30" : "border-white/5"}`}>
+            <p className="text-white/50 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2 md:mb-3">Q{idx + 1}</p>
+            <p className="text-sm md:text-base text-white font-medium mb-4 md:mb-5 leading-relaxed">{q.question}</p>
+            <div className="flex flex-col gap-2 md:gap-3">
               {OPTIONS.map((opt) => {
                 const optText = q[`option${opt}` as keyof Question] as string;
                 const isSelected = answers[idx] === opt;
                 return (
                   <button key={opt} onClick={() => handleAnswerSelect(idx, opt)}
-                    className={`flex items-center gap-4 px-4 py-3 rounded-xl border text-left transition-all ${isSelected ? "border-primary-200 bg-primary-200/10 text-white" : "border-white/10 bg-white/3 text-white/70 hover:bg-white/5 hover:border-white/20"}`}>
-                    <span className={`size-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${isSelected ? "bg-primary-200 text-black" : "bg-white/10 text-white/50"}`}>{opt}</span>
-                    <span className="text-sm">{optText}</span>
+                    className={`flex items-center gap-3 md:gap-4 px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl border text-left transition-all ${isSelected ? "border-primary-200 bg-primary-200/10 text-white" : "border-white/10 bg-white/3 text-white/70 hover:bg-white/5 hover:border-white/20"}`}>
+                    <span className={`size-6 md:size-7 rounded-md md:rounded-lg flex items-center justify-center text-[10px] md:text-xs font-bold shrink-0 ${isSelected ? "bg-primary-200 text-black" : "bg-white/10 text-white/50"}`}>{opt}</span>
+                    <span className="text-xs md:text-sm">{optText}</span>
                   </button>
                 );
               })}

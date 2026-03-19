@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { generateAptitudeExam, evaluateUserAptitude, savePracticeAptitudeResult, type Question } from "@/lib/actions/aptitude.action";
 import { toast } from "sonner";
-import { getCurrentUser } from "@/lib/actions/auth.action";
+import { getCurrentUser, getStudentFromSession } from "@/lib/actions/auth.action";
 import { deductTokens } from "@/lib/actions/billing.action";
 import HowToUseSection from "./HowToUseSection";
 import { useRouter } from "next/navigation";
@@ -56,16 +56,23 @@ export default function AptitudeRoundClient() {
     setTotalTimeUsed(0);
     setEvaluation(null);
     
-    const user = await getCurrentUser();
-    if (!user) {
+    const [user, student] = await Promise.all([
+      getCurrentUser(),
+      getStudentFromSession()
+    ]);
+
+    if (!user && !student) {
       toast.error("Please sign in to start the exam.");
       router.push("/sign-in");
       return;
     }
 
+    const userId = user?.id || student?.firestoreId;
+    const userType = user?.type || "student";
+    const collection = userType === "student" ? "students" : "users";
+
     // Token gating
-    const collection = user.type === "student" ? "students" : "users";
-    const tokenResult = await deductTokens(user.id, 50, "Aptitude Practice Round", collection);
+    const tokenResult = await deductTokens(userId!, 50, "Aptitude Practice Round", collection);
     if (!tokenResult.success) {
       toast.error("Insufficient tokens. Please upgrade your plan.");
       router.push("/pricing");
@@ -291,15 +298,15 @@ export default function AptitudeRoundClient() {
     const formatTime = (s: number) => `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
 
     return (
-      <div className="fixed inset-0 z-[100] bg-[#050505] flex flex-col pt-10">
+      <div className="fixed inset-0 z-[100] bg-[#050505] flex flex-col pt-4 md:pt-10">
         <ExamSecurity 
           isActive={step === "exam"} 
           onAutoSubmit={() => submitExam(true)} 
           title="Aptitude Practice"
         />
-        <div className="max-w-5xl mx-auto w-full px-6 flex flex-col h-full pb-10">
+        <div className="max-w-5xl mx-auto w-full px-4 md:px-6 flex flex-col h-full pb-4 md:pb-10">
           {/* Top Bar */}
-          <div className="flex items-center justify-between mb-10">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 md:mb-10">
              <div className="flex items-center gap-4">
                 <div className="size-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
                   <ClipboardList className="text-blue-400 size-5" />
@@ -325,9 +332,9 @@ export default function AptitudeRoundClient() {
               </Button>
           </div>
 
-          <div className="flex-1 flex gap-8 overflow-hidden">
+          <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-8 overflow-hidden">
              {/* Sticky Progress Sidebar */}
-             <div className="w-64 glass-card p-6 border-white/5 bg-[#09090b]/40 flex flex-col">
+             <div className="w-full md:w-64 shrink-0 glass-card p-4 md:p-6 border-white/5 bg-[#09090b]/40 flex flex-col">
                 <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.2em] mb-6">Quick Navigation</p>
                 <div className="grid grid-cols-4 gap-2 mb-8">
                    {questions.map((_, i) => (

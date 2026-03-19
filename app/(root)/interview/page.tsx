@@ -1,19 +1,24 @@
 import { redirect } from "next/navigation";
 import Agent from "@/components/Agent";
-import { getCurrentUser } from "@/lib/actions/auth.action";
+import { getCurrentUser, getStudentFromSession } from "@/lib/actions/auth.action";
 
 interface PageProps {
   searchParams: Promise<Record<string, string>>;
 }
 
 const Page = async ({ searchParams }: PageProps) => {
-  const user = await getCurrentUser();
-  if (!user) redirect("/sign-in");
+  const [user, student] = await Promise.all([
+    getCurrentUser(),
+    getStudentFromSession()
+  ]);
+
+  if (!user && !student) redirect("/sign-in");
 
   const params = await searchParams;
   const position = params.position || "";
   const experience = params.experience || "";
-  const fullName = params.fullName || user?.name || "";
+  const fullName = params.fullName || user?.name || student?.name || "";
+  const userId = user?.id || student?.firestoreId;
   const interviewId = params.interviewId || "";
 
   return (
@@ -31,8 +36,8 @@ const Page = async ({ searchParams }: PageProps) => {
       </div>
 
       <Agent
-        userName={fullName || user?.name!}
-        userId={user?.id}
+        userName={fullName}
+        userId={userId}
         interviewId={interviewId}
         type="generate"
         interviewPosition={position}

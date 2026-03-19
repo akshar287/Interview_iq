@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { generateTechnicalProblem, evaluateTechnicalSubmission, savePracticeTechnicalResult } from "@/lib/actions/technical.action";
 import CodeEditor from "@/components/CodeEditor";
 import { toast } from "sonner";
-import { getCurrentUser } from "@/lib/actions/auth.action";
+import { getCurrentUser, getStudentFromSession } from "@/lib/actions/auth.action";
 import HowToUseSection from "./HowToUseSection";
 import { deductTokens } from "@/lib/actions/billing.action";
 import { useRouter } from "next/navigation";
@@ -46,16 +46,30 @@ export default function TechnicalRoundClient() {
 
   const startExam = async (diff: 'Easy' | 'Medium' | 'Difficult') => {
     setDifficulty(diff);
-    const user = await getCurrentUser();
-    if (!user) {
+    // Immediate fullscreen request to capture user gesture
+    try {
+      if (typeof document !== "undefined" && !document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch {}
+
+    const [user, student] = await Promise.all([
+      getCurrentUser(),
+      getStudentFromSession()
+    ]);
+
+    if (!user && !student) {
       toast.error("Please sign in to start the exam.");
       router.push("/sign-in");
       return;
     }
 
+    const userId = user?.id || student?.firestoreId;
+    const userType = user?.type || "student";
+    const collection = userType === "student" ? "students" : "users";
+
     // Token gating
-    const collection = user.type === "student" ? "students" : "users";
-    const tokenResult = await deductTokens(user.id, 50, `Technical Practice Round (${diff})`, collection);
+    const tokenResult = await deductTokens(userId!, 50, `Technical Practice Round (${diff})`, collection);
     if (!tokenResult.success) {
       toast.error("Insufficient tokens. Please upgrade your plan.");
       router.push("/pricing");
@@ -252,24 +266,24 @@ export default function TechnicalRoundClient() {
             title="Technical Practice"
           />
         {/* HEADER */}
-        <div className="h-16 bg-[#09090b] border-b border-white/10 flex items-center justify-between px-6 shrink-0">
-          <div className="flex items-center gap-3">
+        <div className="h-auto md:h-16 bg-[#09090b] border-b border-white/10 flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-4 md:py-0 gap-4 shrink-0">
+          <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="size-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
               <Code2 className="text-purple-400 size-4" />
             </div>
-            <span className="text-white font-bold tracking-tight">Tech Exam 1</span>
+            <span className="text-white font-bold tracking-tight text-sm md:text-base">Tech Exam 1</span>
           </div>
           
-          <div className="flex items-center gap-8">
+          <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-4 md:gap-8">
             <div className="flex items-center gap-3">
-              <Clock className={`size-5 ${timeLeft < 120 ? "text-red-400 animate-pulse" : "text-green-400"}`} />
-              <span className={`text-2xl font-black font-mono tracking-wider ${timeLeft < 120 ? "text-red-400" : "text-green-400"}`}>
+              <Clock className={`size-4 md:size-5 ${timeLeft < 120 ? "text-red-400 animate-pulse" : "text-green-400"}`} />
+              <span className={`text-xl md:text-2xl font-black font-mono tracking-wider ${timeLeft < 120 ? "text-red-400" : "text-green-400"}`}>
                 {formatTime(timeLeft)}
               </span>
             </div>
             <Button 
               onClick={() => handleSubmit(false)}
-              className="bg-red-500 hover:bg-red-600 text-white font-bold px-6 py-2 rounded-xl"
+              className="bg-red-500 hover:bg-red-600 text-white font-bold px-4 md:px-6 py-1 md:py-2 h-9 md:h-10 rounded-lg md:rounded-xl text-xs md:text-sm"
             >
               Submit Exam
             </Button>
@@ -277,42 +291,42 @@ export default function TechnicalRoundClient() {
         </div>
 
         {/* MAIN AREA */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {/* PROBLEM DESCRIPTION (Left) */}
-          <div className="w-[30%] border-r border-white/10 bg-[#09090b] flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-white/5 bg-white/3 flex items-center gap-2">
+          <div className="w-full md:w-[30%] border-b md:border-b-0 md:border-r border-white/10 bg-[#09090b] flex flex-col max-h-[40vh] md:max-h-full overflow-hidden">
+            <div className="p-3 md:p-4 border-b border-white/5 bg-white/3 flex items-center gap-2 shrink-0">
               <BookOpen size={14} className="text-purple-400" />
-              <span className="text-white/50 text-xs font-bold uppercase tracking-widest">Problem Statement</span>
+              <span className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Problem Statement</span>
             </div>
-            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
               <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 text-[10px] font-black uppercase mb-4">
                 Q1
               </div>
-              <h1 className="text-3xl font-black text-white mb-6 leading-tight">{problem.title}</h1>
+              <h1 className="text-2xl md:text-3xl font-black text-white mb-4 md:mb-6 leading-tight">{problem.title}</h1>
               
-              <div className="text-white/70 leading-relaxed text-sm whitespace-pre-wrap mb-8">
+              <div className="text-white/70 leading-relaxed text-xs md:text-sm whitespace-pre-wrap mb-6 md:mb-8">
                 {problem.description}
               </div>
 
-              <div className="space-y-6">
+               <div className="space-y-4 md:space-y-6">
                 <div>
-                  <p className="text-white/40 uppercase tracking-[0.2em] text-[10px] font-black mb-3">Example Input</p>
-                  <pre className="bg-white/5 border border-white/10 rounded-xl p-4 text-white/80 font-mono text-xs whitespace-pre-wrap">
+                  <p className="text-white/40 uppercase tracking-[0.2em] text-[10px] font-black mb-2 md:mb-3">Example Input</p>
+                  <pre className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white/80 font-mono text-[10px] md:text-xs whitespace-pre-wrap">
                     {problem.exampleInput}
                   </pre>
                 </div>
 
                 <div>
-                  <p className="text-white/40 uppercase tracking-[0.2em] text-[10px] font-black mb-3">Example Output</p>
-                  <pre className="bg-white/5 border border-white/10 rounded-xl p-4 text-white/80 font-mono text-xs whitespace-pre-wrap">
+                  <p className="text-white/40 uppercase tracking-[0.2em] text-[10px] font-black mb-2 md:mb-3">Example Output</p>
+                  <pre className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white/80 font-mono text-[10px] md:text-xs whitespace-pre-wrap">
                     {problem.exampleOutput}
                   </pre>
                 </div>
 
                 {problem.constraints && (
                   <div>
-                    <p className="text-white/40 uppercase tracking-[0.2em] text-[10px] font-black mb-3">Constraints</p>
-                    <div className="bg-orange-500/5 text-orange-200/70 border border-orange-500/10 rounded-xl p-4 text-xs italic">
+                    <p className="text-white/40 uppercase tracking-[0.2em] text-[10px] font-black mb-2 md:mb-3">Constraints</p>
+                    <div className="bg-orange-500/5 text-orange-200/70 border border-orange-500/10 rounded-xl p-3 md:p-4 text-[10px] md:text-xs italic">
                       {problem.constraints}
                     </div>
                   </div>
@@ -329,13 +343,13 @@ export default function TechnicalRoundClient() {
           </div>
 
           {/* EDITOR & TERMINAL (Right / Center) */}
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col overflow-hidden min-h-[50vh] md:min-h-0">
              <CodeEditor 
                 language="python"
                 code={code}
                 onChange={(val) => setCode(val || "")}
                 onRunMode={true}
-                containerClassName="border-0 rounded-none"
+                containerClassName="border-0 rounded-none flex-1"
              />
           </div>
         </div>

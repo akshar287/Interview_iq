@@ -8,21 +8,32 @@ import {
   getFeedbackByInterviewId,
   getInterviewById,
 } from "@/lib/actions/general.action";
-import { getCurrentUser } from "@/lib/actions/auth.action";
+import { getCurrentUser, getStudentFromSession } from "@/lib/actions/auth.action";
 import DisplayTechIcons from "@/components/DisplayTechIcons";
 
-const InterviewDetails = async ({ params }: RouteParams) => {
+interface InterviewDetailsProps {
+  params: Promise<{ id: string }>;
+}
+
+const InterviewDetails = async ({ params }: InterviewDetailsProps) => {
   const { id } = await params;
 
-  const user = await getCurrentUser();
-  if (!user) redirect("/sign-in");
+  const [user, student] = await Promise.all([
+    getCurrentUser(),
+    getStudentFromSession()
+  ]);
+
+  if (!user && !student) redirect("/sign-in");
+
+  const userName = user?.name || student?.name || "";
+  const userId = user?.id || student?.firestoreId;
 
   const interview = await getInterviewById(id);
   if (!interview) redirect("/");
 
   const feedback = await getFeedbackByInterviewId({
     interviewId: id,
-    userId: user?.id!,
+    userId: userId!,
   });
 
   return (
@@ -49,8 +60,8 @@ const InterviewDetails = async ({ params }: RouteParams) => {
       </div>
 
       <Agent
-        userName={user?.name!}
-        userId={user?.id}
+        userName={userName}
+        userId={userId}
         interviewId={id}
         type="interview"
         questions={interview.questions}

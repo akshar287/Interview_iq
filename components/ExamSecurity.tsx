@@ -100,12 +100,28 @@ export default function ExamSecurity({
       return false;
     };
 
+    // Mobile-specific: pagehide is more reliable for app switching on some mobile browsers
+    const handlePageHide = () => {
+      console.log("Page hide detected");
+      if (isActive) {
+        handleSecurityViolation("Page hide (App switch/Tab close)");
+      }
+    };
+
     // Event listeners
     document.addEventListener("visibilitychange", handleVisibility);
     document.addEventListener("keydown", blockKey, true);
     document.addEventListener("contextmenu", blockContext);
     window.addEventListener("blur", handleBlur);
     window.addEventListener("focus", handleFocus);
+    window.addEventListener("pagehide", handlePageHide);
+    
+    // Interval check as a fallback for mobile backgrounding
+    const visibilityInterval = setInterval(() => {
+      if (document.visibilityState === "hidden" && isActive && !showWarning) {
+        handleSecurityViolation("Visibility interval check failed");
+      }
+    }, 2000);
     
     // Global body styling for security
     const originalUserSelect = document.body.style.userSelect;
@@ -123,6 +139,8 @@ export default function ExamSecurity({
       document.removeEventListener("contextmenu", blockContext);
       window.removeEventListener("blur", handleBlur);
       window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("pagehide", handlePageHide);
+      clearInterval(visibilityInterval);
       document.body.style.userSelect = originalUserSelect || "auto";
       document.body.style.webkitUserSelect = originalWebkitUserSelect || "auto";
     };
@@ -133,7 +151,7 @@ export default function ExamSecurity({
   return (
     <>
       {/* Visual Indicator that Security is ON */}
-      <div className="fixed top-2 right-24 z-[9999] flex items-center gap-3">
+      <div className="fixed top-2 md:top-2 bottom-4 md:bottom-auto right-4 md:right-24 z-[9999] flex items-center gap-3 pointer-events-none">
         <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-[10px] font-black uppercase tracking-widest pointer-events-none">
           <div className="size-1.5 rounded-full bg-green-500 animate-pulse" />
           Security Protocol Active

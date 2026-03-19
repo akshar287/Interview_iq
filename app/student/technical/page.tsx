@@ -341,24 +341,24 @@ export default function StudentTechnicalPage() {
         title="Official Technical Exam"
       />
       {/* HEADER */}
-      <div className="h-14 bg-[#09090b] border-b border-white/10 flex items-center justify-between px-4 shrink-0">
-        <div className="flex items-center gap-3">
-          <Code2 className="text-purple-400 size-5" />
-          <span className="text-white font-bold text-sm">{activeSession?.sessionName}</span>
+      <div className="h-auto md:h-14 bg-[#09090b] border-b border-white/10 flex flex-col md:flex-row items-center justify-between px-4 py-3 md:py-0 gap-3 shrink-0">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Code2 className="text-purple-400 size-5 shrink-0" />
+          <span className="text-white font-bold text-sm truncate">{activeSession?.sessionName}</span>
         </div>
-        <div className="flex items-center gap-4">
-          <span className={`font-mono text-lg font-bold ${timeLeft > 120 ? "text-green-400" : "text-red-400 animate-pulse"}`}>
+        <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-4 md:gap-6">
+          <span className={`font-mono text-base md:text-lg font-bold ${timeLeft > 120 ? "text-green-400" : "text-red-400 animate-pulse"}`}>
             {formatTime(timeLeft)}
           </span>
-          <Button onClick={() => doSubmit(false)} className="h-8 bg-red-500 hover:bg-red-600 text-xs font-bold">
+          <Button onClick={() => doSubmit(false)} className="h-8 md:h-9 bg-red-500 hover:bg-red-600 text-[10px] md:text-xs font-bold px-3 md:px-4">
             Submit Exam
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* LEFT PANE: QUESTIONS OVERVIEW & CURRENT Q DESCRIPTION */}
-        <div className="w-1/3 border-r border-white/10 bg-[#09090b] flex flex-col min-w-[300px]">
+        <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-white/10 bg-[#09090b] flex flex-col max-h-[40vh] md:max-h-full min-w-0 md:min-w-[300px]">
           {/* Question Nav */}
           <div className="flex overflow-x-auto p-2 gap-2 border-b border-white/10 shrink-0 custom-scrollbar">
             {exam.questions.map((_, i) => (
@@ -399,7 +399,7 @@ export default function StudentTechnicalPage() {
         </div>
 
         {/* RIGHT PANE: EDITOR & TERMINAL */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 min-h-[50vh] md:min-h-0">
           <div className="h-12 bg-white/5 border-b border-white/10 flex items-center px-4 justify-between shrink-0">
             <div className="flex items-center gap-2">
               <FileCode className="text-white/40 size-4" />
