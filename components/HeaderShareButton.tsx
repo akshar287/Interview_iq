@@ -4,19 +4,23 @@ import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-export default function HeaderShareButton() {
+interface Props {
+  isDesktop?: boolean;
+}
+
+export default function HeaderShareButton({ isDesktop }: Props) {
   const handleShare = async () => {
     const shareData = {
       title: "Careerly",
       text: "Check out Careerly — AI-powered placement preparation suite for Aptitude, Technical & AI Mock Interviews!",
-      url: window.location.origin,
+      url: "https://interview-iq-beta.vercel.app/",
     };
 
     try {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(window.location.origin);
+        await navigator.clipboard.writeText("https://interview-iq-beta.vercel.app/");
         toast.success("Link copied to clipboard!");
       }
     } catch (err) {
@@ -28,7 +32,7 @@ export default function HeaderShareButton() {
     <Button
       variant="ghost"
       size="icon"
-      className="md:hidden size-11 rounded-xl bg-primary-200/10 border border-primary-200/20 text-primary-200 hover:text-white hover:bg-primary-200 transition-all shadow-lg active:scale-95"
+      className={`${!isDesktop ? "md:hidden" : ""} size-11 rounded-xl bg-primary-200/10 border border-primary-200/20 text-primary-200 hover:text-white hover:bg-primary-200 transition-all shadow-lg active:scale-95`}
       onClick={handleShare}
       aria-label="Share Careerly"
     >

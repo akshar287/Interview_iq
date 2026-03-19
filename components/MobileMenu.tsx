@@ -30,14 +30,14 @@ export default function MobileMenu({ onSignOut, userName, isStudent, isGuest }: 
     const shareData = {
       title: "Careerly",
       text: "Check out Careerly — AI-powered placement preparation suite for Aptitude, Technical & AI Mock Interviews!",
-      url: window.location.origin,
+      url: "https://interview-iq-beta.vercel.app/",
     };
 
     try {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(window.location.origin);
+        await navigator.clipboard.writeText("https://interview-iq-beta.vercel.app/");
         toast.success("Link copied to clipboard!");
       }
     } catch (err) {

@@ -6,12 +6,12 @@ import { revalidatePath } from "next/cache";
 
 import { isAuthenticated, getCurrentUser, signOut, getStudentFromSession, clearStudentSession } from "@/lib/actions/auth.action";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
 import AmbientSound from "@/components/AmbientSound";
 import SecondaryNavbar from "@/components/SecondaryNavbar";
 import MobileMenu from "@/components/MobileMenu";
 import HeaderShareButton from "@/components/HeaderShareButton";
-import { MessageSquare, Code2, ClipboardList, GraduationCap } from "lucide-react";
+import InstallButton from "@/components/InstallButton";
+import { MessageSquare, Code2, ClipboardList, GraduationCap, LogOut } from "lucide-react";
 import UserPerformanceBanner from "@/components/UserPerformanceBanner";
 import StudentPerformanceBanner from "@/components/StudentPerformanceBanner";
 
@@ -54,6 +54,14 @@ const Layout = async ({ children }: { children: ReactNode }) => {
           <h2 className="text-xl sm:text-2xl font-black tracking-tighter italic uppercase"><span style={{ color: '#2dd4bf' }}>Career</span><span style={{ color: '#f97316' }}>ly</span></h2>
         </Link>
 
+        {/* Desktop Navigation Extras (Share/Download) */}
+        <div className="hidden md:flex items-center gap-3 mr-4">
+          <HeaderShareButton isDesktop />
+          <div className="scale-90 origin-right">
+             <InstallButton isMinimal />
+          </div>
+        </div>
+
         {/* Right side: sign-in links or sign-out button */}
         {!isUserAuthenticated && !student && (
           <div className="hidden md:flex items-center gap-2 sm:gap-6">
@@ -70,6 +78,14 @@ const Layout = async ({ children }: { children: ReactNode }) => {
         )}
 
           <div className="flex items-center gap-1.5 sm:gap-2">
+            {(isUserAuthenticated || student) && (
+              <form action={isUserAuthenticated ? handleSignOut : handleStudentSignOut} className="hidden md:block">
+                <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/5 gap-2 rounded-xl transition-all">
+                  <LogOut size={18} />
+                  <span className="font-medium">Sign Out</span>
+                </Button>
+              </form>
+            )}
             <HeaderShareButton />
             <MobileMenu 
               onSignOut={isUserAuthenticated ? handleSignOut : handleStudentSignOut}

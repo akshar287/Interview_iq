@@ -3,8 +3,13 @@
 import { useState, useEffect } from "react";
 import { Download, Monitor, Smartphone, Info, X, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
-export default function InstallButton() {
+interface Props {
+  isMinimal?: boolean;
+}
+
+export default function InstallButton({ isMinimal }: Props) {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -59,73 +64,107 @@ export default function InstallButton() {
 
   return (
     <>
-      <div className="flex flex-col gap-2 mb-4">
+      <div className={`flex flex-col gap-2 ${!isMinimal ? "mb-4" : ""}`}>
         <Button
           variant="ghost"
-          className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 h-14 rounded-2xl gap-3 justify-center transition-all shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)] group"
+          size={isMinimal ? "icon" : "default"}
+          className={isMinimal 
+            ? "size-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:text-white hover:bg-emerald-500 transition-all shadow-lg active:scale-95"
+            : "w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 h-14 rounded-2xl gap-3 justify-center transition-all shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)] group"
+          }
           onClick={handleInstallClick}
         >
-          <Download size={20} className="group-hover:bounce transition-transform" />
-          <div className="flex flex-col items-start leading-none ml-1">
-            <span className="font-black text-[11px] uppercase tracking-widest">Download App</span>
-            <span className="text-[9px] text-emerald-400/60 font-bold uppercase mt-0.5">
-              {isInstallable ? "Install on your device" : "Installation Guide"}
-            </span>
-          </div>
+          <Download size={20} className={!isMinimal ? "group-hover:bounce transition-transform" : ""} />
+          {!isMinimal && (
+            <div className="flex flex-col items-start leading-none ml-1">
+              <span className="font-black text-[11px] uppercase tracking-widest">Download App</span>
+              <span className="text-[9px] text-emerald-400/60 font-bold uppercase mt-0.5">
+                {isInstallable ? "Install on device" : "Installation Guide"}
+              </span>
+            </div>
+          )}
         </Button>
       </div>
 
       {showIOSGuide && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-[#09090b]/80 backdrop-blur-md" onClick={() => setShowIOSGuide(false)} />
-          <div className="relative w-full max-w-sm bg-[#121214] border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden">
-            {/* Background Glow */}
-            <div className="absolute -top-24 -right-24 size-48 bg-primary-200/20 blur-[60px] rounded-full" />
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
+          {/* Enhanced Backdrop - 클릭시 닫힘 (English: Click to close) */}
+          <div 
+            className="fixed inset-0 bg-black/90 backdrop-blur-xl cursor-pointer transition-all animate-in fade-in duration-300" 
+            onClick={() => setShowIOSGuide(false)} 
+          />
+          
+          {/* Modal Content - Perfected Wide Form for Laptop */}
+          <div className="relative w-[90vw] md:w-[650px] bg-[#09090b] border border-white/10 rounded-[2.5rem] shadow-[0_40px_100px_-15px_rgba(0,0,0,0.6)] overflow-hidden animate-in zoom-in-95 duration-500">
+            {/* Emerald Top Accent */}
+            <div className="absolute top-0 left-0 w-full h-[4px] bg-emerald-500" />
             
-            <div className="relative text-center">
-              <div className="flex justify-between items-start mb-6">
-                <div className="size-12 rounded-2xl bg-primary-200 p-2.5 shadow-lg shadow-primary-200/20">
-                  <Image src="/careerly-icon.png" alt="Logo" width={40} height={40} className="rounded-md" />
+            <div className="p-8 md:p-14">
+              <div className="flex justify-between items-center mb-10">
+                <div className="flex items-center gap-4">
+                  <div className="size-14 rounded-2xl bg-emerald-500 p-3 shadow-2xl shadow-emerald-500/30">
+                    <Image src="/careerly-icon.png" alt="Logo" width={56} height={56} className="rounded-md" />
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter leading-none italic">Install Careerly</h3>
                 </div>
-                <button onClick={() => setShowIOSGuide(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-                  <X size={20} className="text-white/40" />
+                <button 
+                  onClick={() => setShowIOSGuide(false)} 
+                  className="size-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-full transition-all border border-white/5 active:scale-90"
+                >
+                  <X size={20} className="text-white hover:scale-110" />
                 </button>
               </div>
 
-              <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tight text-left">How to Install Careerly</h3>
-              <p className="text-white/60 text-sm leading-relaxed mb-8 font-medium text-left">You can install Careerly directly onto your home screen for an app-like experience.</p>
-
-              <div className="space-y-6 text-left">
-                <div className="flex items-start gap-4">
-                  <div className="size-8 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-white font-black text-xs border border-white/10">1</div>
-                  <div className="flex flex-col">
-                    <span className="text-white text-sm font-bold flex items-center gap-2">
-                       {isIOS ? "Tap the Share button" : "Click the browser menu"} 
-                       {isIOS ? <Share size={16} className="text-blue-400" /> : <Monitor size={16} className="text-primary-200" />}
-                    </span>
-                    <span className="text-white/40 text-xs mt-1 font-medium italic">
-                      {isIOS ? "Look for the box with upward arrow in Safari" : "Tap the three-dot menu icon in Chrome/Edge"}
-                    </span>
+              <div className="space-y-10">
+                {/* Step 1 */}
+                <div className="flex gap-6 group">
+                  <div className="size-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 text-white font-black text-sm group-hover:bg-emerald-500 group-hover:text-black transition-colors duration-300">1</div>
+                  <div className="flex-1 space-y-2">
+                    <h4 className="text-white font-black uppercase text-xs tracking-[0.2em] opacity-60">
+                       {isIOS ? "Safari Share Button" : "Browser Menu Option"}
+                    </h4>
+                    <p className="text-white text-[15px] font-bold leading-relaxed">
+                      {isIOS 
+                        ? "Tap the Share icon at the bottom of Safari (square with arrow)." 
+                        : "Click the three dots (⋮) or arrow (↑) in your browser menu."}
+                    </p>
+                    <div className="flex items-center gap-2.5 text-blue-400 font-black text-xs bg-blue-400/10 w-fit px-4 py-2 rounded-xl border border-blue-400/20 mt-2 uppercase tracking-widest">
+                       {isIOS ? <Share size={16} /> : <Monitor size={16} />} 
+                       {isIOS ? "Tap Share" : "Menu Settings"}
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="size-8 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-white font-black text-xs border border-white/10">2</div>
-                  <div className="flex flex-col">
-                    <span className="text-white text-sm font-bold">Select the option</span>
-                    <span className="text-primary-200 text-sm font-black flex items-center gap-2 mt-0.5 uppercase tracking-wider">
-                       {isIOS ? "Add to Home Screen" : "Install App"}
-                    </span>
+                {/* Step 2 */}
+                <div className="flex gap-6 group">
+                  <div className="size-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 text-white font-black text-sm group-hover:bg-emerald-500 group-hover:text-black transition-colors duration-300">2</div>
+                  <div className="flex-1 space-y-2">
+                    <h4 className="text-white font-black uppercase text-xs tracking-[0.2em] opacity-60">
+                       Add to Home Screen
+                    </h4>
+                    <p className="text-white text-[15px] font-bold leading-relaxed">
+                      {isIOS 
+                        ? "Scroll down and select 'Add to Home Screen' to install." 
+                        : "Choose 'Install App' or 'Install Careerly' from the list."}
+                    </p>
+                    <div className="flex items-center gap-2.5 text-emerald-400 font-black text-xs bg-emerald-500/10 w-fit px-4 py-2 rounded-xl border border-emerald-500/20 mt-2 uppercase tracking-widest leading-none">
+                       {isIOS ? "Add to Home Screen" : "Install Careerly"}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <Button 
-                className="w-full mt-10 bg-white text-black hover:bg-white/90 font-black uppercase tracking-widest text-[10px] h-12 rounded-xl"
-                onClick={() => setShowIOSGuide(false)}
-              >
-                Let&apos;s Go
-              </Button>
+              <div className="mt-14 pt-8 border-t border-white/5">
+                <Button 
+                  className="w-full bg-white text-black hover:bg-emerald-500 hover:text-white font-black uppercase tracking-[0.4em] text-[11px] h-16 rounded-2xl shadow-xl active:scale-[0.98] transition-all"
+                  onClick={() => setShowIOSGuide(false)}
+                >
+                  Close & Start Now
+                </Button>
+                <p className="text-center text-[10px] text-white/20 font-black uppercase tracking-[0.2em] mt-6">
+                  Click anywhere outside to dismiss guide
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -134,5 +173,3 @@ export default function InstallButton() {
   );
 }
 
-// Helper needed for Image in a client component if using next/image
-import Image from "next/image";
