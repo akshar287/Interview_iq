@@ -8,14 +8,14 @@ import {
   MessageSquare, Code2, ClipboardList, GraduationCap, LogOut, 
   Download, Loader2, Clock, FileText, Timer, Play, Brain, 
   CheckCircle, AlertTriangle, Star, BarChart3, XCircle, 
-  Target, Lightbulb, TrendingUp, CalendarDays, ShieldAlert 
+  Target, Lightbulb, TrendingUp, CalendarDays, ShieldAlert,
+  Layout 
 } from "lucide-react";
 import UserPerformanceBanner from "@/components/UserPerformanceBanner";
 import StudentPerformanceBanner from "@/components/StudentPerformanceBanner";
 import ExamSecurity from "@/components/ExamSecurity";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Layout, ClipboardList, Clock } from "lucide-react";
 import {
   getAptitudeExamByCollege,
   submitAptitudeExam,
