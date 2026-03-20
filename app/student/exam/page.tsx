@@ -13,7 +13,9 @@ import {
 import UserPerformanceBanner from "@/components/UserPerformanceBanner";
 import StudentPerformanceBanner from "@/components/StudentPerformanceBanner";
 import ExamSecurity from "@/components/ExamSecurity";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Layout, ClipboardList, Clock } from "lucide-react";
 import {
   getAptitudeExamByCollege,
   submitAptitudeExam,
@@ -161,6 +163,8 @@ export default function StudentExamPage() {
   const [autoSubmitted, setAutoSubmitted] = useState(false);
   const [showSecurityWarning, setShowSecurityWarning] = useState(false);
   const [applyLoading, setApplyLoading] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [zenMode, setZenMode] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const totalDurationRef = useRef<number>(0);
@@ -596,42 +600,103 @@ export default function StudentExamPage() {
           <ShieldAlert size={12} />1 violation recorded — next tab switch will auto-submit
         </div>
       )}
-      <div className="sticky top-0 z-50 bg-[#09090b]/90 backdrop-blur-xl border-b border-white/10 px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex flex-col items-center md:items-start w-full md:w-auto">
-          <p className="text-white font-bold text-base md:text-lg">{student?.name}</p>
-          <p className="text-white/40 text-[10px] md:text-xs">{student?.branch} · Year {student?.year} · {student?.studentId}</p>
+      {/* FLOATING ZEN CONTROLS (Mobile Only) */}
+      <div className="md:hidden fixed top-4 right-4 z-[110] flex gap-2">
+         <button 
+            onClick={() => setZenMode(!zenMode)}
+            className="size-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/70 shadow-2xl"
+          >
+            {zenMode ? <Layout size={20} /> : <Target size={20} className="text-primary-200" />}
+          </button>
+      </div>
+
+      {/* COMPACT MOBILE TIMER (Visible in Zen Mode) */}
+      {zenMode && (
+        <div className="md:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-[110] glass-card px-4 py-2 border-primary-200/30 flex items-center gap-3 shadow-2xl animate-in slide-in-from-bottom-4">
+          <Clock className="size-4 text-primary-200" />
+          <span className={`text-lg font-black font-mono tracking-widest ${timerColor}`}>{formatTime(timeLeft)}</span>
+          <div className="w-px h-4 bg-white/20 mx-1" />
+          <span className="text-xs font-bold text-white/40">{activeIndex + 1}/{total}</span>
         </div>
+      )}
+
+      {/* Top Bar - More compact on mobile */}
+      <div className={cn(
+        "sticky top-0 z-50 bg-[#09090b]/90 backdrop-blur-xl border-b border-white/10 px-4 md:px-6 py-2 md:py-4 flex flex-row items-center justify-between gap-4 h-16 md:h-20 transition-all duration-300",
+        zenMode && "opacity-0 -translate-y-full pointer-events-none"
+      )}>
+        <div className="flex flex-col items-start min-w-0">
+          <p className="text-white font-bold text-sm md:text-lg truncate w-full">{student?.name}</p>
+          <p className="text-white/40 text-[9px] md:text-xs truncate w-full">{student?.branch} · Year {student?.year}</p>
+        </div>
+
         <div className="flex flex-col items-center shrink-0">
-          <p className={`text-2xl md:text-3xl font-black font-mono leading-none ${timerColor}`}>{formatTime(timeLeft)}</p>
-          <p className="text-white/30 text-[10px] md:text-xs mt-1">Time Remaining</p>
+          <p className={`text-xl md:text-3xl font-black font-mono leading-none ${timerColor}`}>{formatTime(timeLeft)}</p>
+          <p className="text-[#666] text-[8px] md:text-xs mt-0.5 uppercase tracking-widest font-bold">Remaining</p>
         </div>
-        <div className="flex flex-col items-center md:items-end gap-1 w-full md:w-auto">
-          <p className="text-white/50 text-xs md:text-sm">{answered}/{total} answered</p>
-          <div className="w-full md:w-32 h-1.5 bg-white/10 rounded-full overflow-hidden">
+
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <p className="text-white/50 text-[10px] md:text-sm font-bold">{answered}/{total}</p>
+          <div className="w-16 md:w-32 h-1 bg-white/10 rounded-full overflow-hidden">
             <div className="h-full bg-primary-200 rounded-full transition-all" style={{ width: `${(answered / total) * 100}%` }} />
           </div>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 pt-8 flex flex-col gap-6">
-        <h1 className="text-2xl font-bold text-white">Aptitude Examination</h1>
-        <p className="text-white/40 text-sm -mt-4">
-          {activeSession?.sessionName} · {student?.collegeName} · {total} Questions · {exam.duration} min
-        </p>
+      <div className="max-w-3xl mx-auto px-4 md:px-6 pt-4 md:pt-8 flex flex-col gap-6 pb-40">
+        <div className="flex flex-col max-md:hidden">
+          <h1 className="text-2xl font-bold text-white">Aptitude Examination</h1>
+          <p className="text-white/40 text-sm">
+            {activeSession?.sessionName} · {student?.collegeName} · {total} Questions · {exam.duration} min
+          </p>
+        </div>
 
         {exam.questions.map((q, idx) => (
-          <div key={idx} className={`glass-card p-4 md:p-6 border transition-all ${answers[idx] ? "border-primary-200/30" : "border-white/5"}`}>
-            <p className="text-white/50 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2 md:mb-3">Q{idx + 1}</p>
-            <p className="text-sm md:text-base text-white font-medium mb-4 md:mb-5 leading-relaxed">{q.question}</p>
-            <div className="flex flex-col gap-2 md:gap-3">
+          <div 
+            key={idx} 
+            className={cn(
+              "glass-card p-6 md:p-8 border transition-all duration-300 relative overflow-hidden",
+              answers[idx] ? "border-primary-200/30" : "border-white/5",
+              "max-md:p-5",
+              activeIndex !== idx && "max-md:hidden",
+              zenMode ? "max-md:min-h-[85vh] max-md:justify-center" : "max-md:mb-4"
+            )}
+          >
+            {/* Question Index Badge */}
+            <div className="absolute top-0 right-0 px-4 py-2 bg-white/5 border-l border-b border-white/5 text-[10px] font-black text-white/20 uppercase tracking-widest">
+              Q{idx + 1}
+            </div>
+
+            <p className="text-white/50 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] mb-4 md:mb-6">Aptitude Question</p>
+            <p className="text-base md:text-xl text-white font-semibold mb-6 md:mb-10 leading-relaxed">{q.question}</p>
+            
+            <div className="flex flex-col gap-3 md:gap-4">
               {OPTIONS.map((opt) => {
                 const optText = q[`option${opt}` as keyof Question] as string;
                 const isSelected = answers[idx] === opt;
                 return (
-                  <button key={opt} onClick={() => handleAnswerSelect(idx, opt)}
-                    className={`flex items-center gap-3 md:gap-4 px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl border text-left transition-all ${isSelected ? "border-primary-200 bg-primary-200/10 text-white" : "border-white/10 bg-white/3 text-white/70 hover:bg-white/5 hover:border-white/20"}`}>
-                    <span className={`size-6 md:size-7 rounded-md md:rounded-lg flex items-center justify-center text-[10px] md:text-xs font-bold shrink-0 ${isSelected ? "bg-primary-200 text-black" : "bg-white/10 text-white/50"}`}>{opt}</span>
-                    <span className="text-xs md:text-sm">{optText}</span>
+                  <button 
+                    key={opt} 
+                    onClick={() => handleAnswerSelect(idx, opt)}
+                    className={cn(
+                      "flex items-center gap-4 px-4 py-4 md:py-5 rounded-xl md:rounded-2xl border text-left transition-all group",
+                      isSelected 
+                        ? "border-primary-200 bg-primary-200/10 shadow-[0_0_20px_rgba(var(--primary-200-rgb),0.1)]" 
+                        : "border-white/5 bg-white/[0.02] text-white/50 hover:bg-white/[0.05] hover:border-white/20"
+                    )}
+                  >
+                    <span className={cn(
+                      "size-8 md:size-10 rounded-lg md:rounded-xl flex items-center justify-center text-xs md:text-sm font-black shrink-0 transition-all",
+                      isSelected ? "bg-primary-200 text-black scale-110" : "bg-white/5 text-white/30 group-hover:bg-white/10"
+                    )}>
+                      {opt}
+                    </span>
+                    <span className={cn(
+                      "text-sm md:text-lg font-medium tracking-tight",
+                      isSelected ? "text-white" : "text-white/60"
+                    )}>
+                      {optText}
+                    </span>
                   </button>
                 );
               })}
@@ -639,7 +704,37 @@ export default function StudentExamPage() {
           </div>
         ))}
 
-        <Button onClick={() => doSubmit(false)} className="w-full h-14 text-lg font-bold rounded-2xl mt-4">
+        {/* MOBILE NAVIGATION CONTROLS */}
+        <div className="md:hidden fixed bottom-6 left-4 right-4 z-50 flex items-center gap-3">
+          <Button 
+            disabled={activeIndex === 0}
+            onClick={() => setActiveIndex(prev => Math.max(0, prev - 1))}
+            className="flex-1 h-14 rounded-2xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10" 
+          >
+            Previous
+          </Button>
+
+          {activeIndex < total - 1 ? (
+            <Button 
+              onClick={() => setActiveIndex(prev => Math.min(total - 1, prev + 1))}
+              className="flex-[2] h-14 rounded-2xl bg-primary-200 hover:bg-primary-300 text-black font-black shadow-2xl"
+            >
+              Next Question
+            </Button>
+          ) : (
+            <Button 
+              onClick={() => doSubmit(false)} 
+              className="flex-[2] h-14 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-black shadow-2xl"
+            >
+              Submit Exam
+            </Button>
+          )}
+        </div>
+
+        <Button 
+          onClick={() => doSubmit(false)} 
+          className="max-md:hidden w-full h-16 text-xl font-black rounded-2xl mt-4 shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+        >
           Submit Exam ({answered}/{total} answered)
         </Button>
       </div>

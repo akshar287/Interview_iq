@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { generateAptitudeExam, evaluateUserAptitude, savePracticeAptitudeResult, type Question } from "@/lib/actions/aptitude.action";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { getCurrentUser, getStudentFromSession } from "@/lib/actions/auth.action";
 import { deductTokens } from "@/lib/actions/billing.action";
 import HowToUseSection from "./HowToUseSection";
@@ -32,6 +33,7 @@ export default function AptitudeRoundClient() {
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [evaluation, setEvaluation] = useState<any>(null);
   const [totalTimeUsed, setTotalTimeUsed] = useState(0);
+  const [zenMode, setZenMode] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -298,43 +300,79 @@ export default function AptitudeRoundClient() {
     const formatTime = (s: number) => `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
 
     return (
-      <div className="fixed inset-0 z-[100] bg-[#050505] flex flex-col pt-4 md:pt-10">
+      <div className={cn(
+        "fixed inset-0 z-[100] bg-[#050505] flex flex-col pt-4 md:pt-10 transition-all duration-300",
+        zenMode && "pt-0"
+      )}>
         <ExamSecurity 
           isActive={step === "exam"} 
           onAutoSubmit={() => submitExam(true)} 
           title="Aptitude Practice"
         />
+
+        {/* FLOATING ZEN CONTROLS (Mobile Only) */}
+        <div className="md:hidden fixed top-4 right-4 z-[110] flex gap-2">
+           <button 
+              onClick={() => setZenMode(!zenMode)}
+              className="size-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/70 shadow-2xl"
+            >
+              {zenMode ? <Layout size={20} /> : <Target size={20} className="text-blue-400" />}
+            </button>
+        </div>
+
+        {/* COMPACT MOBILE TIMER (Visible in Zen Mode) */}
+        {zenMode && (
+          <div className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[110] glass-card px-4 py-2 border-blue-500/30 flex items-center gap-3 shadow-2xl animate-in slide-in-from-bottom-4">
+            <Clock className="size-4 text-blue-400" />
+            <span className="text-lg font-black font-mono tracking-widest text-white">{formatTime(timeLeft)}</span>
+            <div className="w-px h-4 bg-white/20 mx-1" />
+            <span className="text-xs font-bold text-white/40">{activeQuestionIdx + 1}/{numQuestions}</span>
+          </div>
+        )}
+
         <div className="max-w-5xl mx-auto w-full px-4 md:px-6 flex flex-col h-full pb-4 md:pb-10">
           {/* Top Bar */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 md:mb-10">
-             <div className="flex items-center gap-4">
-                <div className="size-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                  <ClipboardList className="text-blue-400 size-5" />
+          <div className={cn(
+            "flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 md:mb-10 transition-all duration-300",
+            zenMode && "opacity-0 h-0 overflow-hidden mb-0",
+            "max-md:gap-2 max-md:mb-4"
+          )}>
+             <div className="flex items-center gap-4 max-md:gap-2">
+                <div className="size-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                   <ClipboardList className="text-blue-400 size-5" />
                 </div>
-                 <div>
-                    <h3 className="text-white font-black leading-none uppercase tracking-widest text-xs">Practice Exam</h3>
-                    <p className="text-white/40 text-[10px] mt-1 uppercase tracking-wider">{selectedCategories.join(" + ")} · {numQuestions} Questions</p>
-                 </div>
+                <div className="overflow-hidden">
+                   <h3 className="text-white font-black leading-none uppercase tracking-widest text-[10px] md:text-xs truncate">Practice Exam</h3>
+                   <p className="text-white/40 text-[9px] md:text-[10px] mt-1 uppercase tracking-wider truncate">
+                      {selectedCategories.join(" + ")} · {numQuestions} Questions
+                   </p>
+                </div>
              </div>
 
-             <div className="glass-card px-6 py-2 border-blue-500/20 flex items-center gap-4">
-                <Clock className={`size-5 ${timeLeft < 60 ? "text-red-400 animate-pulse" : "text-blue-400"}`} />
-                <span className={`text-2xl font-black font-mono tracking-widest ${timeLeft < 60 ? "text-red-400" : "text-white"}`}>
-                   {formatTime(timeLeft)}
-                </span>
-             </div>
+             <div className="flex items-center gap-3 w-full md:w-auto">
+                <div className="glass-card flex-1 md:flex-none px-4 md:px-6 py-2 border-blue-500/20 flex items-center gap-4 justify-center">
+                   <Clock className={`size-4 md:size-5 ${timeLeft < 60 ? "text-red-400 animate-pulse" : "text-blue-400"}`} />
+                   <span className={`text-xl md:text-2xl font-black font-mono tracking-widest ${timeLeft < 60 ? "text-red-400" : "text-white"}`}>
+                      {formatTime(timeLeft)}
+                   </span>
+                </div>
 
-             <Button 
-                 onClick={() => submitExam()}
-                 className="bg-red-500 hover:bg-red-600 text-white font-black px-8 h-12 rounded-xl shadow-[0_10px_20px_rgba(239,44,44,0.2)] transition-all active:scale-95"
-              >
-                 Submit Final Exam
-              </Button>
+                <Button 
+                   onClick={() => submitExam()}
+                   className="flex-1 md:flex-none bg-red-500 hover:bg-red-600 text-white font-black px-4 md:px-8 h-10 md:h-12 rounded-xl shadow-[0_10px_20px_rgba(239,44,44,0.2)] transition-all active:scale-95 text-xs md:text-sm"
+                >
+                   Submit
+                </Button>
+             </div>
           </div>
 
-          <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-8 overflow-hidden">
-             {/* Sticky Progress Sidebar */}
-             <div className="w-full md:w-64 shrink-0 glass-card p-4 md:p-6 border-white/5 bg-[#09090b]/40 flex flex-col">
+
+          <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-8 overflow-hidden relative">
+             {/* Sticky Progress Sidebar (Hidden on mobile by default unless Zen is OFF and we want to see it) */}
+             <div className={cn(
+                "w-full md:w-64 shrink-0 glass-card p-4 md:p-6 border-white/5 bg-[#09090b]/40 flex flex-col transition-all duration-300",
+                zenMode ? "opacity-0 translate-x-[-20px] pointer-events-none max-md:hidden h-0 overflow-hidden" : "max-md:hidden h-0 md:h-auto overflow-hidden md:overflow-visible"
+             )}>
                 <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.2em] mb-6">Quick Navigation</p>
                 <div className="grid grid-cols-4 gap-2 mb-8">
                    {questions.map((_, i) => (
@@ -370,24 +408,30 @@ export default function AptitudeRoundClient() {
                 </div>
              </div>
 
-             {/* Continuous Scrolling Question Area */}
-             <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-8 pb-32">
+              <div className={cn(
+                "flex-1 overflow-y-auto custom-scrollbar pr-0 md:pr-4 space-y-6 md:space-y-8 pb-40 md:pb-32 transition-all duration-500",
+                zenMode && "md:pr-0"
+              )}>
                 {questions.map((q, idx) => (
                    <div 
                       key={idx} 
                       id={`question-${idx}`}
-                      className={`glass-card p-12 border-white/5 bg-[#09090b]/60 flex flex-col relative transition-all duration-500 ${
-                         activeQuestionIdx === idx ? "ring-2 ring-blue-500/50" : ""
-                      }`}
+                      className={cn(
+                        "glass-card border-white/5 bg-[#09090b]/60 flex flex-col relative transition-all duration-500",
+                        activeQuestionIdx === idx ? "ring-2 ring-blue-500/50" : "",
+                        zenMode ? "p-6 md:p-12 min-h-[80vh] justify-center" : "p-6 md:p-12 mb-8",
+                        "max-md:p-5",
+                        activeQuestionIdx !== idx && "max-md:hidden"
+                      )}
                       onMouseEnter={() => setActiveQuestionIdx(idx)}
                    >
                        <div className="absolute top-0 left-0 w-1 h-20 bg-blue-500" />
                        
                        <div className="flex-1">
-                          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/5 text-white/40 text-[10px] font-black uppercase mb-8">
+                          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/5 text-white/40 text-[10px] font-black uppercase mb-6 md:mb-8">
                              Question {idx + 1} of {numQuestions}
                           </div>
-                          <h2 className="text-2xl font-bold text-white leading-relaxed mb-12">
+                          <h2 className="text-xl md:text-2xl font-bold text-white leading-relaxed mb-8 md:mb-12">
                              {q.question}
                           </h2>
 
@@ -413,6 +457,34 @@ export default function AptitudeRoundClient() {
                                 </button>
                              ))}
                           </div>
+                       </div>
+
+                       {/* MOBILE PAGINATION BUTTONS */}
+                       <div className="md:hidden mt-8 flex items-center gap-3">
+                          <Button 
+                             disabled={activeQuestionIdx === 0}
+                             variant="outline"
+                             className="flex-1 h-12 rounded-xl border-white/10 text-white/60 font-bold"
+                             onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveQuestionIdx(prev => Math.max(0, prev - 1));
+                             }}
+                          >
+                             Previous
+                          </Button>
+                          <Button 
+                             className="flex-[2] h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black shadow-lg"
+                             onClick={(e) => {
+                                e.stopPropagation();
+                                if (activeQuestionIdx < numQuestions - 1) {
+                                   setActiveQuestionIdx(prev => Math.min(numQuestions - 1, prev + 1));
+                                } else {
+                                   submitExam();
+                                }
+                             }}
+                          >
+                             {activeQuestionIdx < numQuestions - 1 ? "Next Question" : "Submit Exam"}
+                          </Button>
                        </div>
                    </div>
                 ))}

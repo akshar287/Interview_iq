@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   Code2, Clock, CheckCircle, AlertTriangle, Loader2, Play, Target, ShieldAlert, Brain, ChevronRight, FileCode
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   getTechnicalExamByCollege,
@@ -38,6 +39,7 @@ export default function StudentTechnicalPage() {
   const [status, setStatus] = useState<"loading" | "no-session" | "apply" | "exam" | "submitting" | "result">("loading");
   const [result, setResult] = useState<any>(null);
   const [autoSubmitted, setAutoSubmitted] = useState(false);
+  const [activeTab, setActiveTab] = useState<'problem' | 'editor'>('problem');
   const [applyLoading, setApplyLoading] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -356,9 +358,12 @@ export default function StudentTechnicalPage() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* LEFT PANE: QUESTIONS OVERVIEW & CURRENT Q DESCRIPTION */}
-        <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-white/10 bg-[#09090b] flex flex-col max-h-[40vh] md:max-h-full min-w-0 md:min-w-[300px]">
+        <div className={cn(
+          "w-full md:w-1/3 border-b md:border-b-0 md:border-r border-white/10 bg-[#09090b] flex flex-col md:max-h-full min-w-0 md:min-w-[300px] transition-all duration-300",
+          activeTab !== 'problem' && "max-md:hidden"
+        )}>
           {/* Question Nav */}
           <div className="flex overflow-x-auto p-2 gap-2 border-b border-white/10 shrink-0 custom-scrollbar">
             {exam.questions.map((_, i) => (
@@ -399,7 +404,10 @@ export default function StudentTechnicalPage() {
         </div>
 
         {/* RIGHT PANE: EDITOR & TERMINAL */}
-        <div className="flex-1 flex flex-col min-w-0 min-h-[50vh] md:min-h-0">
+        <div className={cn(
+          "flex-1 flex flex-col min-w-0 min-h-[50vh] md:min-h-0",
+          activeTab !== 'editor' && "max-md:hidden"
+        )}>
           <div className="h-12 bg-white/5 border-b border-white/10 flex items-center px-4 justify-between shrink-0">
             <div className="flex items-center gap-2">
               <FileCode className="text-white/40 size-4" />

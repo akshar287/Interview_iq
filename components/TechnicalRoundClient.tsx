@@ -11,6 +11,7 @@ import {
   CheckCircle2 as CheckCircle2Icon 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { generateTechnicalProblem, evaluateTechnicalSubmission, savePracticeTechnicalResult } from "@/lib/actions/technical.action";
 import CodeEditor from "@/components/CodeEditor";
 import { toast } from "sonner";
@@ -40,6 +41,7 @@ export default function TechnicalRoundClient() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [evaluation, setEvaluation] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'problem' | 'editor'>('problem');
   const [showSolution, setShowSolution] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -281,19 +283,41 @@ export default function TechnicalRoundClient() {
                 {formatTime(timeLeft)}
               </span>
             </div>
-            <Button 
-              onClick={() => handleSubmit(false)}
-              className="bg-red-500 hover:bg-red-600 text-white font-bold px-4 md:px-6 py-1 md:py-2 h-9 md:h-10 rounded-lg md:rounded-xl text-xs md:text-sm"
-            >
-              Submit Exam
-            </Button>
+            
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => handleSubmit(false)}
+                className="bg-red-500 hover:bg-red-600 text-white font-bold px-4 md:px-6 py-1 md:py-2 h-9 md:h-10 rounded-lg md:rounded-xl text-xs md:text-sm"
+              >
+                Submit Exam
+              </Button>
+            </div>
           </div>
         </div>
 
+        {/* MOBILE TABS */}
+        <div className="md:hidden flex border-b border-white/10 bg-[#09090b]">
+          <button 
+            onClick={() => setActiveTab('problem')}
+            className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'problem' ? "text-purple-400 border-b-2 border-purple-400 bg-purple-500/5" : "text-white/40"}`}
+          >
+            Problem
+          </button>
+          <button 
+            onClick={() => setActiveTab('editor')}
+            className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'editor' ? "text-purple-400 border-b-2 border-purple-400 bg-purple-500/5" : "text-white/40"}`}
+          >
+            Editor
+          </button>
+        </div>
+
         {/* MAIN AREA */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
           {/* PROBLEM DESCRIPTION (Left) */}
-          <div className="w-full md:w-[30%] border-b md:border-b-0 md:border-r border-white/10 bg-[#09090b] flex flex-col max-h-[40vh] md:max-h-full overflow-hidden">
+          <div className={cn(
+            "w-full md:w-[30%] border-b md:border-b-0 md:border-r border-white/10 bg-[#09090b] flex flex-col md:max-h-full overflow-hidden transition-all duration-300",
+            activeTab !== 'problem' && "max-md:hidden"
+          )}>
             <div className="p-3 md:p-4 border-b border-white/5 bg-white/3 flex items-center gap-2 shrink-0">
               <BookOpen size={14} className="text-purple-400" />
               <span className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Problem Statement</span>
@@ -343,7 +367,10 @@ export default function TechnicalRoundClient() {
           </div>
 
           {/* EDITOR & TERMINAL (Right / Center) */}
-          <div className="flex-1 flex flex-col overflow-hidden min-h-[50vh] md:min-h-0">
+          <div className={cn(
+            "flex-1 flex flex-col overflow-hidden min-h-[50vh] md:min-h-0",
+            activeTab !== 'editor' && "max-md:hidden"
+          )}>
              <CodeEditor 
                 language="python"
                 code={code}

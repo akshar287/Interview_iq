@@ -234,11 +234,11 @@
     }
 
     .card-interviewer {
-      @apply flex-center flex-col gap-2 p-7 h-[400px] blue-gradient-dark rounded-2xl border border-white/10 flex-1 sm:basis-1/2 w-full shadow-xl;
+      @apply flex-center flex-col gap-2 p-7 h-[250px] sm:h-[400px] blue-gradient-dark rounded-2xl border border-white/10 flex-1 sm:basis-1/2 w-full shadow-xl;
     }
 
     .card-border {
-      @apply border-gradient p-0.5 rounded-2xl flex-1 sm:basis-1/2 w-full h-[400px] max-md:hidden shadow-xl;
+      @apply border-gradient p-0.5 rounded-2xl flex-1 sm:basis-1/2 w-full h-[250px] sm:h-[400px] shadow-xl;
     }
 
     .card-content {
