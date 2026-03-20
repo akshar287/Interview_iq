@@ -43,17 +43,17 @@ const CollegeLayout = async ({ children }: { children: ReactNode }) => {
   // Get current path to avoid infinite redirect
   const headersList = await headers();
   const fullUrl = headersList.get("x-url") || "";
-  
-  // Also check referer as a fallback if x-url is somehow missing
   const referer = headersList.get("referer") || "";
   
-  const isSetupPage = fullUrl.includes("/college/setup") || 
-                      fullUrl.includes("/college/pricing") ||
-                      referer.includes("/college/setup") ||
-                      referer.includes("/college/pricing");
+  // Use a more robust check for setup/pricing pages
+  const currentPath = fullUrl.toLowerCase();
+  const isSetupOrPricing = currentPath.includes("/college/setup") || 
+                           currentPath.includes("/college/pricing") ||
+                           referer.includes("/college/setup") ||
+                           referer.includes("/college/pricing");
 
-  if (!hasPlan && !isSetupPage) {
-    // Force redirect to setup if no plan is found
+  // Only redirect if NOT on setup/pricing and NO plan is active
+  if (!hasPlan && !isSetupOrPricing) {
     redirect("/college/setup");
   }
 

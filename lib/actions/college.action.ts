@@ -44,9 +44,17 @@ export async function addStudent({
         return { success: false, message: "No active plan found. Please select a plan first." };
     }
 
+    const limit = collegeData.studentLimit || 0;
     const currentStudentSnapshot = await db.collection("students").where("collegeId", "==", collegeId).get();
-    if (currentStudentSnapshot.size >= (collegeData.studentLimit || 0)) {
-        return { success: false, message: "Student limit reached for your current plan." };
+    const currentCount = currentStudentSnapshot.size;
+
+    if (currentCount >= limit) {
+        return { 
+          success: false, 
+          message: `Student limit reached (${limit}). Your current plan does not allow adding more students.`,
+          count: currentCount,
+          limit: limit
+        };
     }
 
     const studentId = generateStudentId(name, branch, year);
@@ -72,6 +80,8 @@ export async function addStudent({
     return {
       success: true,
       message: "Student added successfully!",
+      count: currentCount + 1,
+      limit: limit,
       student: {
         id: docRef.id,
         studentId,
@@ -84,6 +94,26 @@ export async function addStudent({
   } catch (error: any) {
     console.error("Add student error:", error);
     return { success: false, message: `Failed to add student: ${error.message}` };
+  }
+}
+
+export async function getCollegeStudentStats(collegeId: string) {
+  try {
+    const collegeDoc = await db.collection("college").doc(collegeId).get();
+    if (!collegeDoc.exists) return { count: 0, limit: 0 };
+    
+    const collegeData = collegeDoc.data();
+    const limit = collegeData?.studentLimit || 0;
+
+    const snapshot = await db.collection("students").where("collegeId", "==", collegeId).get();
+    return { 
+      count: snapshot.size, 
+      limit: limit,
+      plan: collegeData?.plan || "none"
+    };
+  } catch (error) {
+    console.error("getCollegeStudentStats error:", error);
+    return { count: 0, limit: 0 };
   }
 }
 

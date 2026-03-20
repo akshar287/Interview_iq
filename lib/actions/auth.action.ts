@@ -325,8 +325,9 @@ export async function getCurrentUser(): Promise<User | null> {
     const userData = userRecord.data();
 
     if (userData) {
+      const plan = userData.plan || userData.planId;
       let isPlanActive = false;
-      if (userData.planId) {
+      if (plan) {
         if (userData.planExpiry) {
           const expiryDate = typeof userData.planExpiry === "string" 
             ? new Date(userData.planExpiry) 
@@ -335,7 +336,7 @@ export async function getCurrentUser(): Promise<User | null> {
             isPlanActive = true;
           }
         } else {
-          // Legacy support: if planId exists but no expiry, assume active
+          // Legacy support: if plan exists but no expiry, assume active
           isPlanActive = true;
         }
       }

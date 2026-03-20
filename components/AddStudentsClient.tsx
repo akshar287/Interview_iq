@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { UserPlus, Copy, CheckCircle, GraduationCap, Loader2 } from "lucide-react";
+import { UserPlus, Copy, CheckCircle, GraduationCap, Loader2, ShieldCheck, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { addStudent } from "@/lib/actions/college.action";
+import { addStudent, getCollegeStudentStats } from "@/lib/actions/college.action";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const BRANCHES = [
   "Computer Science & Engineering",
@@ -34,6 +36,18 @@ export default function AddStudentsClient({ collegeId, collegeName }: { collegeI
   const [loading, setLoading] = useState(false);
   const [credentials, setCredentials] = useState<GeneratedCredential[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [stats, setStats] = useState<{ count: number; limit: number; plan: string } | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const data = await getCollegeStudentStats(collegeId);
+      setStats(data);
+    };
+    fetchStats();
+  }, [collegeId]);
+
+  const isLimitReached = stats ? stats.count >= stats.limit : false;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,11 +68,15 @@ export default function AddStudentsClient({ collegeId, collegeName }: { collegeI
 
     if (!result.success) {
       toast.error(result.message);
+      if (result.count !== undefined && result.limit !== undefined) {
+         setStats(prev => prev ? { ...prev, count: result.count, limit: result.limit } : null);
+      }
       return;
     }
 
     toast.success(`Student "${form.name}" added successfully!`);
     setCredentials((prev) => [result.student as GeneratedCredential, ...prev]);
+    setStats(prev => prev ? { ...prev, count: (result.count || prev.count), limit: (result.limit || prev.limit) } : null);
     setForm({ name: "", year: "", branch: "" });
   };
 
@@ -70,9 +88,33 @@ export default function AddStudentsClient({ collegeId, collegeName }: { collegeI
 
   return (
     <div className="flex flex-col gap-10 pb-20">
-      <div className="flex items-center gap-3">
-        <UserPlus className="text-primary-200 size-7" />
-        <h1 className="text-3xl font-bold text-white">Add Students</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white/[0.02] p-6 rounded-3xl border border-white/5">
+        <div className="flex items-center gap-4">
+          <div className="size-12 rounded-2xl bg-primary-200/10 flex items-center justify-center border border-primary-200/20 shadow-lg shadow-primary-200/5">
+            <UserPlus className="text-primary-200 size-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-black text-white italic tracking-tight uppercase">Add Students</h1>
+            <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-0.5">Enrollment Management</p>
+          </div>
+        </div>
+
+        {stats && (
+           <div className={`flex items-center gap-4 px-5 py-3 rounded-2xl border transition-all duration-500 ${isLimitReached ? 'border-red-500/30 bg-red-500/5 shadow-lg shadow-red-500/5' : 'border-primary-200/20 bg-primary-200/5 shadow-lg shadow-primary-200/5'}`}>
+              <div className={`size-10 rounded-xl flex items-center justify-center border ${isLimitReached ? 'bg-red-500/10 border-red-500/20' : 'bg-primary-200/10 border-primary-200/20'}`}>
+                 <ShieldCheck size={20} className={isLimitReached ? 'text-red-400' : 'text-primary-200'} />
+              </div>
+              <div className="flex flex-col">
+                 <p className="text-white/40 text-[9px] font-bold uppercase tracking-[0.2em] mb-0.5">Students Enrolled</p>
+                 <div className="flex items-baseline gap-2">
+                    <span className={`text-2xl font-black italic tracking-tighter ${isLimitReached ? 'text-red-400' : 'text-primary-200'}`}>
+                      {stats.count}
+                    </span>
+                    <span className="text-white/20 text-sm font-bold">/ {stats.limit}</span>
+                 </div>
+              </div>
+           </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -134,23 +176,42 @@ export default function AddStudentsClient({ collegeId, collegeName }: { collegeI
               </div>
             </div>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="mt-2 h-12 text-base font-bold rounded-xl"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="size-4 animate-spin mr-2" />
-                  Adding Student...
-                </>
-              ) : (
-                <>
-                  <UserPlus className="size-4 mr-2" />
-                  Add Student & Generate Credentials
-                </>
-              )}
-            </Button>
+            {isLimitReached ? (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 flex flex-col items-center text-center gap-3 animate-in fade-in zoom-in duration-500">
+                <AlertCircle className="text-red-400 size-8" />
+                <div>
+                  <h4 className="text-red-400 font-bold uppercase tracking-widest text-sm">Limit Reached</h4>
+                  <p className="text-white/50 text-xs mt-1 leading-relaxed">
+                    You have reached the maximum number of students allowed for your <strong>{stats?.plan}</strong> plan ({stats?.limit}).
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => router.push("/college/setup")}
+                  className="mt-2 border-red-500/30 text-red-400 hover:bg-red-500/10 w-full rounded-xl"
+                >
+                  Upgrade Plan
+                </Button>
+              </div>
+            ) : (
+              <Button
+                type="submit"
+                disabled={loading}
+                className="mt-2 h-12 text-base font-bold rounded-xl"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin mr-2" />
+                    Adding Student...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="size-4 mr-2" />
+                    Add Student & Generate Credentials
+                  </>
+                )}
+              </Button>
+            )}
           </form>
         </div>
 
