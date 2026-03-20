@@ -10,6 +10,7 @@ interface CodeEditorProps {
   language: string;
   code: string;
   onChange: (value: string | undefined) => void;
+  onLanguageChange?: (lang: string) => void;
   onRunMode?: boolean; 
   containerClassName?: string;
   readOnly?: boolean;
@@ -44,6 +45,7 @@ export default function CodeEditor({
   language, 
   code, 
   onChange, 
+  onLanguageChange,
   onRunMode = true,
   containerClassName = "",
   readOnly = false
@@ -143,26 +145,42 @@ export default function CodeEditor({
       ref={containerRef} 
       className={`flex flex-col border border-white/10 rounded-xl overflow-hidden bg-[#09090b] ${isFullscreen ? "h-screen w-screen z-[9999]" : "h-full w-full"} ${containerClassName}`}
     >
-      <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/10 shrink-0">
-        <div className="flex items-center gap-2">
-          <TerminalIcon className="text-white/40 size-4" />
-          <span className="text-white/60 text-xs font-mono uppercase tracking-widest">{language}</span>
+      <div className="flex items-center justify-between px-3 md:px-4 py-2 bg-white/5 border-b border-white/10 shrink-0 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <TerminalIcon className="text-white/40 size-3 md:size-4 shrink-0" />
+          {onLanguageChange && !readOnly ? (
+            <select 
+              value={language}
+              onChange={(e) => onLanguageChange(e.target.value)}
+              className="bg-transparent text-white/80 text-[10px] md:text-xs font-mono uppercase tracking-wider focus:outline-none cursor-pointer hover:text-white transition-colors py-1 rounded"
+            >
+              <option value="javascript" className="bg-[#09090b]">Javascript</option>
+              <option value="python" className="bg-[#09090b]">Python</option>
+              <option value="java" className="bg-[#09090b]">Java</option>
+              <option value="cpp" className="bg-[#09090b]">C++</option>
+              <option value="c" className="bg-[#09090b]">C</option>
+              <option value="html" className="bg-[#09090b]">HTML/React</option>
+            </select>
+          ) : (
+            <span className="text-white/60 text-[10px] md:text-xs font-mono uppercase tracking-widest truncate">{language}</span>
+          )}
         </div>
-        <div className="flex items-center gap-3">
+        
+        <div className="flex items-center gap-2 md:gap-3 shrink-0">
           {onRunMode && language !== "html" && (
             <button 
               onClick={handleRunCode} 
               disabled={isRunning || readOnly}
-              className={`h-7 px-3 text-[10px] font-bold bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20 rounded-md flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
+              className="h-7 md:h-8 px-2 md:px-3 text-[9px] md:text-[10px] font-black bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20 rounded-md flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group"
             >
-              {isRunning ? <Loader2 size={12} className="animate-spin" /> : <Play size={10} fill="currentColor" />}
+              {isRunning ? <Loader2 size={12} className="animate-spin" /> : <Play size={10} fill="currentColor" className="group-hover:scale-110 transition-transform" />}
               RUN
             </button>
           )}
           <button 
             onClick={toggleFullscreen}
             title={isFullscreen ? "Exit Fullscreen" : "Maximize Editor"}
-            className="p-1.5 rounded-md hover:bg-white/10 text-white/50 transition-colors active:scale-90"
+            className="p-1.5 rounded-md hover:bg-white/10 text-white/40 hover:text-white transition-all active:scale-90 bg-white/5 md:bg-transparent"
           >
             {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
           </button>

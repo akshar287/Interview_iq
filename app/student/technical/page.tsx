@@ -403,37 +403,21 @@ export default function StudentTechnicalPage() {
           </div>
         </div>
 
-        {/* RIGHT PANE: EDITOR & TERMINAL */}
-        <div className={cn(
-          "flex-1 flex flex-col min-w-0 min-h-[50vh] md:min-h-0",
-          activeTab !== 'editor' && "max-md:hidden"
-        )}>
-          <div className="h-12 bg-white/5 border-b border-white/10 flex items-center px-4 justify-between shrink-0">
-            <div className="flex items-center gap-2">
-              <FileCode className="text-white/40 size-4" />
-              <span className="text-white/60 text-xs font-medium">Coding Interface</span>
+          <div className={cn(
+            "flex-1 flex flex-col min-w-0 min-h-[50vh] md:min-h-0",
+            activeTab !== 'editor' && "max-md:hidden"
+          )}>
+            <div className="flex-1 w-full min-h-0">
+              <CodeEditor 
+                language={currentLang}
+                code={codes[activeQuestionIdx]?.code ?? ""}
+                onChange={updateCode}
+                onLanguageChange={updateLanguage}
+                onRunMode={true}
+                containerClassName="border-0 rounded-none h-full"
+              />
             </div>
-            <select 
-              value={currentLang}
-              onChange={(e) => updateLanguage(e.target.value)}
-              className="bg-[#09090b] border border-white/10 text-white text-xs px-3 py-1.5 rounded-lg focus:outline-none focus:border-purple-400"
-            >
-              {langOpts.map(l => (
-                <option key={l} value={l}>{l.toUpperCase()}</option>
-              ))}
-            </select>
           </div>
-          
-          <div className="flex-1 w-full min-h-0">
-            <CodeEditor 
-              language={currentLang}
-              code={codes[activeQuestionIdx]?.code ?? ""}
-              onChange={updateCode}
-              onRunMode={true}
-              containerClassName="border-0 rounded-none h-full"
-            />
-          </div>
-        </div>
       </div>
     </div>
   );

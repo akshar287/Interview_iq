@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import HomeCarousel from "@/components/HomeCarousel";
 import HowToUseSection from "@/components/HowToUseSection";
+import SecurityLandingSection from "@/components/SecurityLandingSection";
 import NewInterviewButton from "@/components/NewInterviewButton";
 import { getCurrentUser, getStudentFromSession } from "@/lib/actions/auth.action";
 import {
@@ -86,10 +87,11 @@ async function Home() {
 
         <HomeCarousel />
 
-        {/* --- ADDED HOW TO USE SECTION HERE for visibility under tabs --- */}
-        <section className="max-w-6xl mx-auto mb-16">
+        <section className="max-w-6xl mx-auto mb-16 px-6">
            <HowToUseSection />
         </section>
+
+        <SecurityLandingSection />
       </>
     );
   }
@@ -178,6 +180,9 @@ async function Home() {
             </div>
           </div>
         </section>
+
+        {/* Security Section (NEW) */}
+        <SecurityLandingSection />
 
         {/* How it Works Section */}
         <section className="max-w-6xl mx-auto px-6 py-32 space-y-16">
@@ -346,9 +351,11 @@ async function Home() {
         </div>
       </div>
 
-      <section className="mb-10 max-w-6xl mx-auto">
+      <section className="mb-10 max-w-6xl mx-auto px-6">
         <HowToUseSection />
       </section>
+
+      <SecurityLandingSection />
 
       {/* Recent Practice Rounds for Regular Users */}
       {!user.isIntern && (aptSubmissions.length > 0 || techSubmissions.length > 0) && (

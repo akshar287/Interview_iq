@@ -43,6 +43,7 @@ export default function TechnicalRoundClient() {
   const [evaluation, setEvaluation] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'problem' | 'editor'>('problem');
   const [showSolution, setShowSolution] = useState(false);
+  const [language, setLanguage] = useState("javascript");
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -117,7 +118,7 @@ export default function TechnicalRoundClient() {
     const res = await evaluateTechnicalSubmission({
       problem,
       code,
-      language: "python", // Default for now
+      language: language,
     });
     
     setIsRunning(false);
@@ -135,7 +136,7 @@ export default function TechnicalRoundClient() {
             studentFirestoreId: user.id,
             problem,
             code,
-            language: "python",
+            language: language,
             totalTimeUsed,
             evaluation: res.evaluation
           }).catch(console.error);
@@ -366,15 +367,15 @@ export default function TechnicalRoundClient() {
             </div>
           </div>
 
-          {/* EDITOR & TERMINAL (Right / Center) */}
           <div className={cn(
             "flex-1 flex flex-col overflow-hidden min-h-[50vh] md:min-h-0",
             activeTab !== 'editor' && "max-md:hidden"
           )}>
              <CodeEditor 
-                language="python"
+                language={language}
                 code={code}
                 onChange={(val) => setCode(val || "")}
+                onLanguageChange={(lang) => setLanguage(lang)}
                 onRunMode={true}
                 containerClassName="border-0 rounded-none flex-1"
              />
