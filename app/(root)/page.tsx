@@ -21,6 +21,7 @@ import HomeCarousel from "@/components/HomeCarousel";
 import HowToUseSection from "@/components/HowToUseSection";
 import SecurityLandingSection from "@/components/SecurityLandingSection";
 import NewInterviewButton from "@/components/NewInterviewButton";
+import DemoPlatformSection from "@/components/DemoPlatformSection";
 import { getCurrentUser, getStudentFromSession } from "@/lib/actions/auth.action";
 import {
   getInterviewById,
@@ -92,6 +93,8 @@ async function Home() {
         </section>
 
         <SecurityLandingSection />
+
+        <DemoPlatformSection />
       </>
     );
   }
@@ -274,6 +277,9 @@ async function Home() {
             <span className="text-2xl font-black italic">NEXUS</span>
           </div>
         </section>
+
+        {/* Demo Platform Section — last */}
+        <DemoPlatformSection />
       </div>
     );
   }
@@ -356,6 +362,8 @@ async function Home() {
       </section>
 
       <SecurityLandingSection />
+
+      <DemoPlatformSection />
 
       {/* Recent Practice Rounds for Regular Users */}
       {!user.isIntern && (aptSubmissions.length > 0 || techSubmissions.length > 0) && (
