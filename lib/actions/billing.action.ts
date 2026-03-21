@@ -5,6 +5,24 @@ import { getCurrentUser } from "./auth.action";
 import { revalidatePath } from "next/cache";
 
 /**
+ * Shared helper to check if a plan has expired.
+ */
+function isPlanExpired(planExpiry: any): boolean {
+  if (!planExpiry) return false; // If no expiry is set, assume legacy/unlimited for now
+  
+  try {
+    const expiryDate = typeof planExpiry === "string" 
+      ? new Date(planExpiry) 
+      : (planExpiry as any).toDate ? (planExpiry as any).toDate() : new Date(planExpiry);
+    
+    return expiryDate < new Date();
+  } catch (e) {
+    console.error("Error parsing plan expiry:", e);
+    return false;
+  }
+}
+
+/**
  * Fetches the user's current token balance from Firestore.
  */
 export async function getUserTokens(userId: string, collection: "users" | "students" = "users"): Promise<number> {
@@ -12,8 +30,23 @@ export async function getUserTokens(userId: string, collection: "users" | "stude
     const userDoc = await db.collection(collection).doc(userId).get();
     if (!userDoc.exists) return 0;
     
-    // Default to 0 if tokens field hasn't been set yet
     const data = userDoc.data();
+    
+    // Strict Expiry Check
+    if (collection === "users") {
+        if (isPlanExpired(data?.planExpiry)) {
+            return 0; // Functionally zero out tokens if plan is expired
+        }
+    } else if (collection === "students") {
+        const collegeId = data?.collegeId;
+        if (collegeId) {
+            const collegeDoc = await db.collection("college").doc(collegeId).get();
+            if (collegeDoc.exists && isPlanExpired(collegeDoc.data()?.planExpiry)) {
+                return 0; // Functionally zero out if college plan is expired
+            }
+        }
+    }
+
     return data?.tokens || 0;
   } catch (error) {
     console.error("Error fetching tokens:", error);
@@ -33,10 +66,26 @@ export async function deductTokens(userId: string, amount: number, reason: strin
       return { success: false, message: "User/Student not found" };
     }
     
-    const currentTokens = userDoc.data()?.tokens || 0;
+    const data = userDoc.data();
+
+    // Strict Expiry Check
+    if (collection === "users") {
+        if (isPlanExpired(data?.planExpiry)) {
+            return { success: false, message: "Your plan has expired. Please upgrade or renew." };
+        }
+    } else if (collection === "students") {
+        const collegeId = data?.collegeId;
+        if (collegeId) {
+            const collegeDoc = await db.collection("college").doc(collegeId).get();
+            if (collegeDoc.exists && isPlanExpired(collegeDoc.data()?.planExpiry)) {
+                return { success: false, message: "College plan has expired. Please contact your administrator." };
+            }
+        }
+    }
     
+    const currentTokens = data?.tokens || 0;
     if (currentTokens < amount) {
-      return { success: false, message: "Insufficient tokens" };
+      return { success: false, message: "Insufficient tokens. Please upgrade your plan." };
     }
     
     await userRef.update({

@@ -13,7 +13,7 @@ import { generateAptitudeExam, evaluateUserAptitude, savePracticeAptitudeResult,
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getCurrentUser, getStudentFromSession } from "@/lib/actions/auth.action";
-import { deductTokens } from "@/lib/actions/billing.action";
+import { deductTokens, getUserTokens } from "@/lib/actions/billing.action";
 import HowToUseSection from "./HowToUseSection";
 import { useRouter } from "next/navigation";
 import ExamSecurity from "./ExamSecurity";
@@ -73,10 +73,10 @@ export default function AptitudeRoundClient() {
     const userType = user?.type || "student";
     const collection = userType === "student" ? "students" : "users";
 
-    // Token gating
-    const tokenResult = await deductTokens(userId!, 50, "Aptitude Practice Round", collection);
-    if (!tokenResult.success) {
-      toast.error("Insufficient tokens. Please upgrade your plan.");
+    // Token prerequisite check
+    const currentTokens = await getUserTokens(userId!, collection);
+    if (currentTokens < 50) {
+      toast.error("Insufficient tokens or plan expired. Please upgrade to start the exam.");
       router.push("/pricing");
       return;
     }
@@ -146,6 +146,19 @@ export default function AptitudeRoundClient() {
       answerTimes,
       totalTimeUsed
     });
+
+    if (res.success) {
+      // Deduct tokens ONLY after successful evaluation
+      const [user, student] = await Promise.all([
+        getCurrentUser(),
+        getStudentFromSession()
+      ]);
+      const userId = user?.id || student?.firestoreId;
+      const userType = user?.type || "student";
+      const collection = userType === "student" ? "students" : "users";
+      
+      await deductTokens(userId!, 50, "Aptitude Practice Round Completion", collection);
+    }
     
     setIsEvaluating(false);
     if (res.success) {

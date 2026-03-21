@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { createFeedback } from "@/lib/actions/general.action";
 import { toast } from "sonner";
-import { deductTokens } from "@/lib/actions/billing.action";
+import { deductTokens, getUserTokens } from "@/lib/actions/billing.action";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import CameraModule from "./CameraModule";
 
@@ -22,6 +22,17 @@ enum CallStatus {
 interface SavedMessage {
   role: "user" | "system" | "assistant";
   content: string;
+}
+
+interface AgentProps {
+  userName: string;
+  userId: string;
+  interviewId?: string;
+  feedbackId?: string;
+  type: "generate" | "interview";
+  questions?: string[];
+  interviewPosition?: string;
+  interviewExperience?: string;
 }
 
 const Agent = ({
@@ -155,12 +166,23 @@ const Agent = ({
       }
     };
 
-    if (callStatus === CallStatus.FINISHED) {
+    const finalizeSession = async () => {
+      const user = await getCurrentUser();
+      if (!user) return;
+      const collection = user.type === "student" ? "students" : "users";
+
       if (type === "generate") {
+        await deductTokens(user.id, 5, "Interview Profile Creation Completion", collection);
         router.push("/");
       } else {
+        // For actual interviews, deduct 175 tokens before/during feedback gen
+        await deductTokens(user.id, 175, "AI Mock Interview Session Completion", collection);
         generateFeedback();
       }
+    };
+
+    if (callStatus === CallStatus.FINISHED) {
+      finalizeSession();
     }
   }, [callStatus]);
 
@@ -176,18 +198,18 @@ const Agent = ({
 
       const collection = user.type === "student" ? "students" : "users";
 
-      // Token gating for actual interviews
+      // Token prerequisite check
       if (type === "interview") {
-        const tokenResult = await deductTokens(user.id, 175, "AI Mock Interview Session", collection);
-        if (!tokenResult.success) {
-          toast.error("Insufficient tokens. Please upgrade your plan.");
+        const tokens = await getUserTokens(user.id, collection);
+        if (tokens < 175) {
+          toast.error("Insufficient tokens or plan expired. Please upgrade your plan to start the interview.");
           router.push("/pricing");
           return;
         }
       } else if (type === "generate") {
-        const tokenResult = await deductTokens(user.id, 5, "Interview Profile Creation", collection);
-        if (!tokenResult.success) {
-          toast.error("Insufficient tokens for profile creation. Please upgrade your plan.");
+        const tokens = await getUserTokens(user.id, collection);
+        if (tokens < 5) {
+          toast.error("Insufficient tokens or plan expired. Please upgrade your plan.");
           router.push("/pricing");
           return;
         }
@@ -221,7 +243,7 @@ const Agent = ({
         console.log("STARTING INTERVIEW ASSISTANT");
 
         const formattedQuestions = questions
-          ? questions.map((q, i) => `${i + 1}. ${q}`).join("\n")
+          ? questions.map((q: string, i: number) => `${i + 1}. ${q}`).join("\n")
           : "";
 
         await vapi.start(INTERVIEW_ASSISTANT!, {

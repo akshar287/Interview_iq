@@ -17,7 +17,7 @@ import CodeEditor from "@/components/CodeEditor";
 import { toast } from "sonner";
 import { getCurrentUser, getStudentFromSession } from "@/lib/actions/auth.action";
 import HowToUseSection from "./HowToUseSection";
-import { deductTokens } from "@/lib/actions/billing.action";
+import { deductTokens, getUserTokens } from "@/lib/actions/billing.action";
 import { useRouter } from "next/navigation";
 import ExamSecurity from "./ExamSecurity";
 
@@ -71,10 +71,10 @@ export default function TechnicalRoundClient() {
     const userType = user?.type || "student";
     const collection = userType === "student" ? "students" : "users";
 
-    // Token gating
-    const tokenResult = await deductTokens(userId!, 50, `Technical Practice Round (${diff})`, collection);
-    if (!tokenResult.success) {
-      toast.error("Insufficient tokens. Please upgrade your plan.");
+    // Token prerequisite check (Reduced to 20 tokens)
+    const currentTokens = await getUserTokens(userId!, collection);
+    if (currentTokens < 20) {
+      toast.error("Insufficient tokens or plan expired. Please upgrade to start the exam.");
       router.push("/pricing");
       return;
     }
@@ -125,6 +125,17 @@ export default function TechnicalRoundClient() {
 
     if (res.success && res.evaluation) {
       setEvaluation(res.evaluation);
+
+      // Deduct tokens ONLY after successful evaluation (20 tokens)
+      const [user, student] = await Promise.all([
+        getCurrentUser(),
+        getStudentFromSession()
+      ]);
+      const userId = user?.id || student?.firestoreId;
+      const userType = user?.type || "student";
+      const collection = userType === "student" ? "students" : "users";
+      
+      await deductTokens(userId!, 20, `Technical Practice Round Completion (${difficulty})`, collection);
 
       // Save practice technical result
       const timeLimit = difficulty === "Easy" ? 20 * 60 : difficulty === "Medium" ? 40 * 60 : 60 * 60;
