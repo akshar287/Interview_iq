@@ -2,16 +2,44 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Users, ArrowRight } from "lucide-react";
+import { Users, ArrowRight, PlayCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { activateCollegeDemo } from "@/lib/actions/college.action";
+import { getCurrentUser } from "@/lib/actions/auth.action";
+import { toast } from "sonner";
 
 export default function CollegeSetupPage() {
     const [numStudents, setNumStudents] = useState<number>(100);
+    const [isDemoLoading, setIsDemoLoading] = useState(false);
     const router = useRouter();
 
     const handleNext = () => {
         if (numStudents < 1) return;
         router.push(`/college/pricing?students=${numStudents}`);
+    };
+
+    const handleStartDemo = async () => {
+        setIsDemoLoading(true);
+        try {
+            const user = await getCurrentUser();
+            if (!user) {
+                toast.error("You must be logged in to start a demo.");
+                return;
+            }
+
+            const res = await activateCollegeDemo(user.id);
+            if (res.success) {
+                toast.success("Free Demo activated! You have 24 hours of full access.");
+                router.push("/college/dashboard");
+            } else {
+                toast.error(res.message || "Failed to activate demo.");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("An unexpected error occurred.");
+        } finally {
+            setIsDemoLoading(false);
+        }
     };
 
     return (
@@ -53,6 +81,32 @@ export default function CollegeSetupPage() {
                 <p className="text-white/30 text-xs">
                     You can always upgrade your plan later if your student count increases.
                 </p>
+
+                <div className="w-full h-px bg-white/10 my-2" />
+
+                <div className="w-full p-6 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center gap-4">
+                    <div className="flex flex-col gap-1">
+                        <h3 className="text-white font-bold text-lg">Not ready to commit?</h3>
+                        <p className="text-white/50 text-sm">
+                            Try our 24-hour Free Demo with up to 20 students.
+                        </p>
+                    </div>
+                    
+                    <Button 
+                        onClick={handleStartDemo}
+                        disabled={isDemoLoading}
+                        variant="secondary"
+                        className="w-full h-12 rounded-xl bg-white/10 hover:bg-white/20 text-white border-white/10 flex items-center justify-center gap-2 transition-all"
+                    >
+                        {isDemoLoading ? (
+                            <Loader2 className="animate-spin size-5" />
+                        ) : (
+                            <>
+                                <PlayCircle size={18} /> Start 1-Day Free Demo
+                            </>
+                        )}
+                    </Button>
+                </div>
             </div>
         </div>
     );

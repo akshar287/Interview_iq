@@ -61,7 +61,7 @@ export async function addStudent({
     const password = generatePassword();
 
     // Assign tokens based on college plan
-    const tokens = collegeData.plan === "pro" ? 4200 : 1800;
+    const tokens = collegeData.studentTokens || (collegeData.plan === "pro" ? 4200 : 1800);
 
     const docRef = await db.collection("students").add({
       name,
@@ -140,6 +140,8 @@ export async function activateCollegePlan(collegeId: string, { plan, studentLimi
             planAmount: amount,
             planActivatedAt: new Date().toISOString(),
             planExpiry: expiryDate.toISOString(),
+            // Reset demo if a real plan is bought? No, but let's ensure studentTokens defaults are handled
+            studentTokens: plan === "pro" ? 4200 : 1800
         });
 
         // Log transaction
@@ -155,6 +157,52 @@ export async function activateCollegePlan(collegeId: string, { plan, studentLimi
         return { success: true };
     } catch (error: any) {
         console.error("Error activating college plan:", error);
+        return { success: false, message: error.message };
+    }
+}
+
+export async function activateCollegeDemo(collegeId: string) {
+    try {
+        const collegeRef = db.collection("college").doc(collegeId);
+        const collegeDoc = await collegeRef.get();
+        
+        if (!collegeDoc.exists) {
+            return { success: false, message: "College not found." };
+        }
+
+        const data = collegeDoc.data();
+        if (data?.hasUsedDemo) {
+            return { success: false, message: "Free demo has already been used for this college." };
+        }
+
+        const expiryDate = new Date();
+        expiryDate.setHours(expiryDate.getHours() + 24); // 24-hour expiry
+
+        await collegeRef.update({
+            plan: "Free Demo",
+            studentLimit: 20,
+            studentTokens: 250,
+            planActivatedAt: new Date().toISOString(),
+            planExpiry: expiryDate.toISOString(),
+            hasUsedDemo: true,
+            planAmount: 0
+        });
+
+        // Log demo activation
+        await db.collection("college_transactions").add({
+            collegeId,
+            plan: "Free Demo",
+            studentLimit: 20,
+            amount: 0,
+            createdAt: new Date().toISOString()
+        });
+
+        revalidatePath("/college/dashboard");
+        revalidatePath("/college/setup");
+        
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error activating college demo:", error);
         return { success: false, message: error.message };
     }
 }

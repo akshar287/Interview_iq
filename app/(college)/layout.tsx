@@ -45,15 +45,18 @@ const CollegeLayout = async ({ children }: { children: ReactNode }) => {
   const fullUrl = headersList.get("x-url") || "";
   const referer = headersList.get("referer") || "";
   
-  // Use a more robust check for setup/pricing pages
+  // Normalize and clean paths
   const currentPath = fullUrl.toLowerCase();
-  const isSetupOrPricing = currentPath.includes("/college/setup") || 
-                           currentPath.includes("/college/pricing") ||
-                           referer.includes("/college/setup") ||
-                           referer.includes("/college/pricing");
+  const refPath = referer.toLowerCase();
+  
+  const isSetupPage = currentPath.includes("/college/setup") || refPath.includes("/college/setup");
+  const isPricingPage = currentPath.includes("/college/pricing") || refPath.includes("/college/pricing");
+  const isSignInPage = currentPath.includes("/college/sign-in") || refPath.includes("/college/sign-in");
 
-  // Only redirect if NOT on setup/pricing and NO plan is active
-  if (!hasPlan && !isSetupOrPricing) {
+  // Only redirect to setup if:
+  // 1. User has no active plan
+  // 2. User is NOT already on setup, pricing, or sign-in pages
+  if (!hasPlan && !isSetupPage && !isPricingPage && !isSignInPage) {
     redirect("/college/setup");
   }
 
