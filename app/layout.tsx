@@ -39,6 +39,8 @@ export const viewport = {
 
 import GlobalBackButton from "@/components/GlobalBackButton";
 import PWARegistration from "@/components/PWARegistration";
+import GlobalBannerFetcher from "@/components/GlobalBannerFetcher";
+import { Suspense } from "react";
 
 export default function RootLayout({
   children,
@@ -48,6 +50,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${monaSans.className} antialiased pattern`}>
+        <Suspense fallback={null}>
+          <GlobalBannerFetcher />
+        </Suspense>
         <PWARegistration />
         {children}
         <GlobalBackButton />
