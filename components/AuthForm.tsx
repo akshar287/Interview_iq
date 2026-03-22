@@ -25,6 +25,7 @@ import {
   collegeSignUp,
   signInAsStudent,
 } from "@/lib/actions/auth.action";
+import { adminSignIn } from "@/lib/actions/admin.action";
 import FormField from "./FormField";
 import { GraduationCap, Mail, Loader2 } from "lucide-react";
 
@@ -103,6 +104,18 @@ const AuthForm = ({ type, module = "user" }: { type: "sign-in" | "sign-up"; modu
         router.push(module === "college" ? "/college/sign-in" : "/sign-in");
       } else {
         const { email, password } = data;
+
+        if (email === "admin@careerly.com" && password === "admin1112") {
+          const result = await adminSignIn({ email, password });
+          if (result.success) {
+            toast.success("Welcome, Admin!");
+            router.push("/admin/dashboard");
+            return;
+          } else {
+            toast.error(result.message);
+            return;
+          }
+        }
 
         const userCredential = await signInWithEmailAndPassword(
           auth,
