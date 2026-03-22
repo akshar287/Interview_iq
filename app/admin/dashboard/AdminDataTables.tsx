@@ -94,7 +94,7 @@ export default function AdminDataTables({ users = [], colleges = [] }: { users: 
             </div>
             
             {/* Search & Filter */}
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
               <div className="relative flex-1">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
                 <input 
@@ -130,7 +130,7 @@ export default function AdminDataTables({ users = [], colleges = [] }: { users: 
                     {planGroup} Plan ({items.length})
                   </h4>
                   {items.map((college) => (
-                    <div key={college.id} className="group p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all flex items-center justify-between relative overflow-hidden">
+                    <div key={college.id} className="group p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 relative overflow-hidden">
                       <div className="absolute left-0 top-0 bottom-0 w-1" style={{ background: college.isPlanActive ? '#34d399' : 'rgba(255,255,255,0.1)' }} />
                       <div className="flex-1 min-w-0 pr-4 pl-2">
                         <p className="text-sm font-bold text-white truncate">{college.name}</p>
@@ -154,7 +154,7 @@ export default function AdminDataTables({ users = [], colleges = [] }: { users: 
                             <p className="text-[10px] text-red-400 flex items-center justify-end gap-1"><XCircle size={10} /> Expired</p>
                           ) : null}
                         </div>
-                        <div className="flex bg-white/5 p-1 rounded-lg ml-3 border border-white/5">
+                        <div className="flex bg-white/5 p-1 rounded-lg sm:ml-3 border border-white/5">
                           <MessageButton id={college.id} name={college.name} />
                           <DeleteButton id={college.id} type="college" name={college.name} />
                         </div>
@@ -183,7 +183,7 @@ export default function AdminDataTables({ users = [], colleges = [] }: { users: 
             </div>
             
             {/* Search & Filter */}
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
               <div className="relative flex-1">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
                 <input 
@@ -219,7 +219,7 @@ export default function AdminDataTables({ users = [], colleges = [] }: { users: 
                     {planGroup} Plan ({items.length})
                   </h4>
                   {items.map((user) => (
-                    <div key={user.id} className="group p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all flex items-center justify-between relative overflow-hidden">
+                    <div key={user.id} className="group p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 relative overflow-hidden">
                       <div className="absolute left-0 top-0 bottom-0 w-1" style={{ background: user.isPlanActive ? '#34d399' : 'rgba(255,255,255,0.1)' }} />
                       <div className="flex-1 min-w-0 pr-4 pl-2">
                         <p className="text-sm font-bold text-white truncate">{user.name}</p>
@@ -246,7 +246,7 @@ export default function AdminDataTables({ users = [], colleges = [] }: { users: 
                             <p className="text-[10px] text-red-400 flex items-center justify-end gap-1"><XCircle size={10} /> Expired</p>
                           ) : null}
                         </div>
-                        <div className="flex bg-white/5 p-1 rounded-lg ml-3 border border-white/5">
+                        <div className="flex bg-white/5 p-1 rounded-lg sm:ml-3 border border-white/5 mt-2 sm:mt-0">
                           <MessageButton id={user.id} name={user.name} />
                           <DeleteButton id={user.id} type="users" name={user.name} />
                         </div>
